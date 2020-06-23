@@ -1404,6 +1404,8 @@ function compute_current_TRIP(TRIP_min,TRIP_max, samples)
   }
 }
 
+
+
   // net Pressure-Volume Work:
   // integral under P*V curve
   function PressureVolumeWork(samples, a,z) {
@@ -1416,8 +1418,7 @@ function compute_current_TRIP(TRIP_min,TRIP_max, samples)
       // I'll use qadrilateral approximation.
       // We'll form each quadrilateral between two samples.
       var ms = flows[j+1].ms - flows[j].ms;
-      var netWorkDone = ((flows[j+1].val*pressures[j+1].val) - (flows[j].val*pressures[j+1].val ))/2) * CONVERT_PIRDS_TO_SLM;
-      var TotalWorkDone = 
+      var ht = (((flows[j+1].val*pressures[j+1].val) + (flows[j].val*pressures[j+1].val ))/2) * CONVERT_PIRDS_TO_SLM;
       // Flow in standard liters per minute,
       // divide by 60000 to get liters/s
       pressureVolume_prod += ms * ht/60000;
@@ -1429,6 +1430,97 @@ function compute_current_TRIP(TRIP_min,TRIP_max, samples)
     return pressureVolume_prod/1033
   }
 
+  function testWork(samples){ // breaths give us inspiration transition points
+    var flows = samples.filter(s => s.event == 'M' && s.type == 'F');
+    var first_time = flows[0].ms;
+    var last_time = flows[flows.length - 1].ms;
+    var duration = last_time - first_time;
+    console.log(flows);
+
+    const vm = 10;
+    var transitions = compute_transitions(vm,flows);
+    var breaths = compute_breaths_based_without_negative_flow(transitions,flows);
+    console.log(breaths);
+   }
+
+
+
+  // This should be in liters...
+  function integrateSamples(a,z,flows) {
+    // -1 for quadilateral approximation
+    var vol = 0;
+    for(var j = a; j < z-1; j++) {
+      // I'll use qadrilateral approximation.
+      // We'll form each quadrilateral between two samples.
+      var ms = flows[j+1].ms - flows[j].ms;
+      var ht = ((flows[j+1].val + flows[j].val )/2) * CONVERT_PIRDS_TO_SLM;
+      // Flow is actually in standard liters per minute,
+      // so to get liters we divide by 60 to it l/s,
+      // and and divde by 1000 to convert ms to seconds.
+      // We could do that here, but will move constants
+      // to end...
+      vol += ms * ht;
+      if (isNaN(vol)) {
+        debugger;
+      }
+    }
+    return vol/(60*1000);
+  }
+
+  // This is based only on inhalations, and
+  // is therefore functional when there is a check valve
+  // in place. Such a system will rarely
+  // have negative flows, and we must mark
+  // the beginning of a breath from a transition to a "1"
+  // state from any other state.
+  // This algorithm is simple: A breath begins on a trasition
+  // to 1 from a not 1 state. This algorithm is susceptible
+  // to "stutter" near the boundary point, but if necessary
+  // a digital filter would sove that; we have not yet found
+  // that level of sophistication needed.
+  // We still want to track zeros, but now must strack them
+  // as a falling signal.
+  
+  function compute_breaths_based_without_negative_flow(transitions,flows) {
+    var beg = 0;
+    var zero = 0;
+    var last = 0;
+    var voli = 0;
+    var vole = 0;
+
+    var breaths = [];
+    var expiring = true;
+
+    for(var i = 0; i < transitions.length; i++) {
+      // We're looking for the end of the inhalation here!!
+      if (((i -1) >= 0) && transitions[i-1].state == 1 &&
+          (transitions[i].state == 0 || transitions[i].state == -1 )) {
+        zero = i;
+      }
+      if (expiring && transitions[i].state == 1) {
+        breaths.push({ ms: transitions[i].ms,
+		       sample: transitions[i].sample,
+		       vol_e: vole,
+		       vol_i: voli,
+                       trans_begin_inhale: beg,
+                       trans_cross_zero: zero,
+                       trans_end_exhale: i,
+		     }
+		    );
+        beg = i;
+        expiring = false;
+        vole = integrateSamples(last,transitions[i].sample,flows);
+
+        last = transitions[i].sample;
+      }
+      if (!expiring && ((transitions[i].state == -1) || (transitions[i].state == 0)))  {
+        expiring = true;
+        voli = integrateSamples(last,transitions[i].sample,flows);
+        last = transitions[i].sample;
+      }
+    }
+    return breaths;
+  }
 
 // A simple computation of a moving window trace
 // computing [A + -B], where A is volume to left
@@ -1471,28 +1563,6 @@ function computeMovingWindowTrace(samples,t,v) {
   var breaths = [];
   var expiring = false;
 
-  // This should be in liters...
-  function integrateSamples(a,z) {
-    // -1 for quadilateral approximation
-    var vol = 0;
-    for(var j = a; j < z-1; j++) {
-      // I'll use qadrilateral approximation.
-      // We'll form each quadrilateral between two samples.
-      var ms = flows[j+1].ms - flows[j].ms;
-      var ht = ((flows[j+1].val + flows[j].val )/2) * CONVERT_PIRDS_TO_SLM;
-      // Flow is actually in standard liters per minute,
-      // so to get liters we divide by 60 to it l/s,
-      // and and divde by 1000 to convert ms to seconds.
-      // We could do that here, but will move constants
-      // to end...
-      vol += ms * ht;
-      if (isNaN(vol)) {
-        debugger;
-      }
-    }
-    return vol/(60*1000);
-  }
-
   function compute_breaths_based_on_exhalations(transitions) {
     var beg = 0;
     var zero = 0;
@@ -1517,71 +1587,18 @@ function computeMovingWindowTrace(samples,t,v) {
 		    );
         beg = i;
         expiring = false;
-        vole = integrateSamples(last,transitions[i].sample);
+        vole = integrateSamples(last,transitions[i].sample,flows);
         last = transitions[i].sample;
       }
       if (!expiring && transitions[i].state == -1) {
         expiring = true;
-        voli = integrateSamples(last,transitions[i].sample);
+        voli = integrateSamples(last,transitions[i].sample,flows);
         last = transitions[i].sample;
       }
     }
   }
-  // This is based only on inhalations, and
-  // is therefore functional when there is a check valve
-  // in place. Such a system will rarely
-  // have negative flows, and we must mark
-  // the beginning of a breath from a transition to a "1"
-  // state from any other state.
-  // This algorithm is simple: A breath begins on a trasition
-  // to 1 from a not 1 state. This algorithm is susceptible
-  // to "stutter" near the boundary point, but if necessary
-  // a digital filter would sove that; we have not yet found
-  // that level of sophistication needed.
-  // We still want to track zeros, but now must strack them
-  // as a falling signal.
-  function compute_breaths_based_without_negative_flow(transitions) {
-    var beg = 0;
-    var zero = 0;
-    var last = 0;
-    var voli = 0;
-    var vole = 0;
 
-    var breaths = [];
-    var expiring = true;
-
-    for(var i = 0; i < transitions.length; i++) {
-      // We're looking for the end of the inhalation here!!
-      if (((i -1) >= 0) && transitions[i-1].state == 1 &&
-          (transitions[i].state == 0 || transitions[i].state == -1 )) {
-        zero = i;
-      }
-      if (expiring && transitions[i].state == 1) {
-        breaths.push({ ms: transitions[i].ms,
-		       sample: transitions[i].sample,
-		       vol_e: vole,
-		       vol_i: voli,
-                       trans_begin_inhale: beg,
-                       trans_cross_zero: zero,
-                       trans_end_exhale: i,
-		     }
-		    );
-        beg = i;
-        expiring = false;
-        vole = integrateSamples(last,transitions[i].sample);
-
-        last = transitions[i].sample;
-      }
-      if (!expiring && ((transitions[i].state == -1) || (transitions[i].state == 0)))  {
-        expiring = true;
-        voli = integrateSamples(last,transitions[i].sample);
-        last = transitions[i].sample;
-      }
-    }
-    return breaths;
-  }
-
-  breaths = compute_breaths_based_without_negative_flow(transitions);
+  breaths = compute_breaths_based_without_negative_flow(transitions,flows);
 
   return [transitions,breaths];
 }
