@@ -725,22 +725,6 @@ function plot(samples, trans, breaths) {
       return plot;
 
     }
-    function gen_clock_graph(selected,name,color, textposition) {
-      var millis = unpack(selected, 'ms');
-      var zeroed = millis.map(m =>(m-min)/1000.0);
-      var vs = selected.map( s => -30)
-      var vs_t = selected.map(v => v.buff);
-      var plot = {type: "scatter", mode: "markers+text",
-                     name: name,
-                     textposition: textposition,
-                     x: zeroed,
-                     y: vs,
-                     text: vs_t,
-                     marker: { size: 10, color: color }
-                    };
-      return plot;
-
-    }
     function gen_message_events(samples,name,color, textposition) {
       var messages = samples.filter(s => s.event == 'E' && s.type == 'M');
       // Now I want to filter our all flow error messages...
@@ -749,7 +733,7 @@ function plot(samples, trans, breaths) {
       // Basically, we will show only the first of these in a "run"
       // This is rather difficult; we will instead just use 200 ms
       // as a window.
-      const time_window_ms = 200;
+      const time_windwow_ms = 200;
 
       var lows = [];
       var highs = [];
@@ -757,10 +741,10 @@ function plot(samples, trans, breaths) {
       for(var i = 0; i < messages.length; i++) {
         var m = messages[i];
         if (m.buff == FLOW_TOO_LOW) {
-          if ((lows.length == 0) || ((lows.length > 0) && (lows[lows.length-1].ms < (m.ms - time_window_ms))))
+          if ((lows.length == 0) || ((lows.length > 0) && (lows[lows.length-1].ms < (m.ms - 200))))
             lows.push(m);
         } else if (m.buff == FLOW_TOO_HIGH) {
-          if ((highs.length == 0) || ((highs.length > 0) && (highs[highs.length-1].ms < (m.ms - time_window_ms))))
+          if ((highs.length == 0) || ((highs.length > 0) && (highs[highs.length-1].ms < (m.ms - 200))))
             highs.push(m);
         } else {
           others.push(m);
@@ -782,20 +766,6 @@ function plot(samples, trans, breaths) {
                                     (s => -75.0),
                                  (v =>  v.buff));
       return [lowsPlot,highsPlot,othersPlot];
-    }
-    function gen_clock_events(samples,name,color, textposition) {
-      var messages = samples.filter(s => s.event == 'E' && s.type == 'C');
-      const time_window_ms = 200;
-
-      var clocks = [];
-      for(var i = 0; i < messages.length; i++) {
-        var m = messages[i];
-         if ((clocks.length == 0) || ((clocks.length > 0) && (clocks[clocks.length-1].ms < (m.ms - time_window_ms))))
-            clocks.push(m);
-      }
-
-      var clocksPlot = gen_clock_graph(clocks,name,color,textposition);
-      return clocksPlot;
     }
     {
       var fio2AirwayPlot = gen_graph_measurement(samples,"FiO2 (%)","Black",'top center','O','A',
@@ -845,12 +815,6 @@ function plot(samples, trans, breaths) {
        event_graph.push(l);
        event_graph.push(h);
        event_graph.push(o);
-     }
-
-     {
-       var cs = gen_clock_events(samples,"Wall Clock","black",'top center');
-
-       event_graph.push(cs);
      }
 
 
@@ -1439,6 +1403,33 @@ function compute_current_TRIP(TRIP_min,TRIP_max, samples)
     return TRIP_m;
   }
 }
+
+  // net Pressure-Volume Work:
+  // integral under P*V curve
+  function PressureVolumeWork(samples, a,z) {
+    // -1 for quadilateral approximation
+    var flows = samples.filter(s => s.event == 'M' && s.type == 'F');
+    var pressures = samples.filter(s => s.event == 'M' && s.type == 'D' && s.loc == 'A');
+
+    var pressureVolume_prod= 0;
+    for(var j = a; j < z-1; j++) {
+      // I'll use qadrilateral approximation.
+      // We'll form each quadrilateral between two samples.
+      var ms = flows[j+1].ms - flows[j].ms;
+      var netWorkDone = ((flows[j+1].val*pressures[j+1].val) - (flows[j].val*pressures[j+1].val ))/2) * CONVERT_PIRDS_TO_SLM;
+      var TotalWorkDone = 
+      // Flow in standard liters per minute,
+      // divide by 60000 to get liters/s
+      pressureVolume_prod += ms * ht/60000;
+      if (isNaN(pressureVolume_prod)) {
+        debugger;
+      }
+    }
+    // pressure cm H2O --> atm (divide by 1033)
+    return pressureVolume_prod/1033
+  }
+
+
 // A simple computation of a moving window trace
 // computing [A + -B], where A is volume to left
 // of sample int time window t, and B is volume to right
