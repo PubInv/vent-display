@@ -1,4 +1,4 @@
-# vent-diplay
+# Vent Display
 A Ventilator Display that consumes PIRDS data and performs most clinical respiration calculations
 
 This is an important part of the Public Invention's goal of creating an opens source ventilator ecosystem.
