@@ -424,6 +424,8 @@ var FLOW_LIMITS_EXCEEDED = false;
 const FLOW_TOO_HIGH = "FLOW OUT OF RANGE HIGH";
 const FLOW_TOO_LOW = "FLOW OUT OF RANGE LOW";
 
+const SAMPLES_BETWEEN_FIO2_REPORTS = 30000;
+
 const VENTMON_DATA_LAKE = "http://ventmon.coslabs.com";
 const queryString = window.location.search;
 const urlParams = new URLSearchParams(queryString);
@@ -433,14 +435,14 @@ var NUM_TO_READ = 500;
 
 var DATA_RETRIEVAL_PERIOD = 50;
 
-var RESPIRATION_RATE_WINDOW_SECONDS = 20;
+var RESPIRATION_RATE_WINDOW_SECONDS = 60;
 
 var intervalID = null;
 
 
 // This sould be better as time, but is easier
 // to do as number of samples.
-var MAX_SAMPLES_TO_STORE_S = 32000;
+var MAX_SAMPLES_TO_STORE_S = 16000;
 var samples = [];
 var INITS_ONLY = true;
 
@@ -709,6 +711,18 @@ function plot(samples, trans, breaths) {
       var selected = samples.filter(s => s.event == 'M' && s.type == tp && s.loc == lc);
       return gen_graph(selected, name, color, textposition, vf, tf);
     }
+
+    function gen_graph_measurement_timed(samples, name, color, textposition, tp, lc, vf, tf,time_window_ms) {
+      var messages = samples.filter(s => s.event == 'M' && s.type == tp && s.loc == lc);
+      var separated = [];
+      for(var i = 0; i < messages.length; i++) {
+        var m = messages[i];
+        if ((separated.length == 0) || ((separated.length > 0) && (separated[separated.length-1].ms < (m.ms - time_window_ms))))
+          separated.push(m);
+      }
+      return gen_graph_measurement(separated, name, color, textposition, tp, lc, vf, tf);
+    }
+
     function gen_graph(selected,name,color, textposition, vf, tf) {
       var millis = unpack(selected, 'ms');
       var zeroed = millis.map(m =>(m-min)/1000.0);
@@ -798,9 +812,13 @@ function plot(samples, trans, breaths) {
       return clocksPlot;
     }
     {
-      var fio2AirwayPlot = gen_graph_measurement(samples,"FiO2 (%)","Black",'top center','O','A',
-                              (s => s.val),
-                              (v =>  "FiO2 (A): "+v.toFixed(1)+"%"));
+      var fio2AirwayPlot = gen_graph_measurement_timed(samples,
+                                                 "FiO2 (%)",
+                                                 "Black",'top center','O','A',
+                                                 (s => s.val),
+                                                 (v =>  "FiO2 (A): "+v.toFixed(1)+"%"),
+                                                 // O2 reported only once every 10 seconds
+                                                SAMPLES_BETWEEN_FIO2_REPORTS);
       event_graph.push(fio2AirwayPlot);
     }
 
@@ -1053,7 +1071,7 @@ var LIMITS = {
   tv: { h: 1000,
          l: 200},
   fio2: { h: 100,
-         l: 20},
+         l: 18},
   taip: { h: 100, // These are in ms
          l: 0},
   trip: { h: 100, // These are in ms
@@ -1668,11 +1686,6 @@ $( document ).ready(function() {
     DSERVER_URL = $("#dserverurl").val();
     start_interval_timer();
   });
-
-  // $( "#num_to_read" ).val( NUM_TO_READ );
-  // $('#num_to_read').change(function () {
-  //   NUM_TO_READ = $("#num_to_read").val();
-  // });
 
   $( "#traceid" ).val( TRACE_ID );
   $('#traceid').change(function () {
