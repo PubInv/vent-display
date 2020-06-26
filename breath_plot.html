@@ -1406,29 +1406,61 @@ function compute_current_TRIP(TRIP_min,TRIP_max, samples)
 
 
 
-  // net Pressure-Volume Work:
-  // integral under P*V curve
-  function PressureVolumeWork(samples, a,z) {
+  // A routine to calculate work per breath
+  function PressureVolumeWork(breath, transitions, samples) {
     // -1 for quadilateral approximation
-    var flows = samples.filter(s => s.event == 'M' && s.type == 'F');
-    var pressures = samples.filter(s => s.event == 'M' && s.type == 'D' && s.loc == 'A');
-
-    var pressureVolume_prod= 0;
-    for(var j = a; j < z-1; j++) {
-      // I'll use qadrilateral approximation.
-      // We'll form each quadrilateral between two samples.
-      var ms = flows[j+1].ms - flows[j].ms;
-      var ht = (((flows[j+1].val*pressures[j+1].val) + (flows[j].val*pressures[j+1].val ))/2) * CONVERT_PIRDS_TO_SLM;
-      // Flow in standard liters per minute,
-      // divide by 60000 to get liters/s
-      pressureVolume_prod += ms * ht/60000;
-      if (isNaN(pressureVolume_prod)) {
-        debugger;
-      }
-    }
+    if (breath.vol_i == 0) {
+      return("null");
+    } else {
+    var beginTransition = transitions[breath.trans_begin_inhale];
+    var beginTime_ms = beginTransition.ms;
+    var endTransition = transitions[breath.trans_cross_zero];
+    var endTime_ms = endTransition.ms;
+    var flows = samples.filter(s => s.event == 'M' && s.type == 'F' && s.ms >= beginTime_ms && s.ms <= endTime_ms);
+    var pressures = samples.filter(s => s.event == 'M' && s.type == 'D' && s.loc == 'A'&& s.ms >= beginTime_ms && s.ms <= endTime_ms);
+    console.log("begin transition time, end transition time:",beginTime_ms,endTime_ms);
+    //var pressureVolume_prod= 0;
+    //for(var j = a; j < z-1; j++) {
+    //  // I'll use qadrilateral approximation.
+    //  // We'll form each quadrilateral between two samples.
+    //  var ms = flows[j+1].ms - flows[j].ms;
+    //  var ht = (((flows[j+1].val*pressures[j+1].val) + (flows[j].val*pressures[j+1].val ))/2) * CONVERT_PIRDS_TO_SLM;
+    //  // Flow in standard liters per minute,
+    //  // divide by 60000 to get liters/s
+    //  pressureVolume_prod += ms * ht/60000;
+    //  if (isNaN(pressureVolume_prod)) {
+    //    debugger;
+    //  }
+    // }
     // pressure cm H2O --> atm (divide by 1033)
-    return pressureVolume_prod/1033
+    // return pressureVolume_prod/1033
+
+    // average pressure * average flow ~ approximation of work
+    var pAv_cm = 0;
+    for (var i = 0; i<pressures.length; i++) {
+      pAv_cm += pressures[i].val/10;
+    }
+    pAv_cm /= pressures.length;
+    var pressures_pascales = pAv_cm * 98.0665; //cm to pasc.
+    var fAv_lpm = 0;
+    for (var i = 0; i<flows.length; i++) {
+      fAv_lpm += flows[i].val/1000;
+    }
+    fAv_lpm /= flows.length;
+    console.log("flows:",flows,"\npressures:",pressures)
+    console.log("pAv, vAv = ",pAv_cm,fAv_lpm);
+    var flow_cubicMetersPerSecond = fAv_lpm/1000/60; //lpm to cmps 
+    var avPower = pressures_pascales*flow_cubicMetersPerSecond; // Watts
+    var avWork = avPower * (endTime_ms - beginTime_ms)/1000; // Joules
+    console.log("Power (Watts):",avPower);
+    console.log("Work (Joules):",avWork);
+    return avWork;
+    }
   }
+  
+
+
+
 
   function testWork(samples){ // breaths give us inspiration transition points
     var flows = samples.filter(s => s.event == 'M' && s.type == 'F');
@@ -1441,6 +1473,10 @@ function compute_current_TRIP(TRIP_min,TRIP_max, samples)
     var transitions = compute_transitions(vm,flows);
     var breaths = compute_breaths_based_without_negative_flow(transitions,flows);
     console.log(breaths);
+    for(i = 0; i<breaths.length; i++) {
+      var w = PressureVolumeWork(breaths[i], transitions, samples);
+      console.log(w);
+    }
    }
 
 
