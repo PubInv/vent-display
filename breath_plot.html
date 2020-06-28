@@ -1407,18 +1407,92 @@ function compute_current_TRIP(TRIP_min,TRIP_max, samples)
 
 
   // A routine to calculate work per breath
-  function PressureVolumeWork(breath, transitions, samples) {
-    // -1 for quadilateral approximation
-    if (breath.vol_i == 0) {
-      return("null");
-    } else {
+function PressureVolumeWork(breath, transitions, samples) {
+  // -1 for quadilateral approximation
+  if (breath.vol_i == 0) {
+    return null;
+  } else {
     var beginTransition = transitions[breath.trans_begin_inhale];
     var beginTime_ms = beginTransition.ms;
     var endTransition = transitions[breath.trans_cross_zero];
     var endTime_ms = endTransition.ms;
     var flows = samples.filter(s => s.event == 'M' && s.type == 'F' && s.ms >= beginTime_ms && s.ms <= endTime_ms);
     var pressures = samples.filter(s => s.event == 'M' && s.type == 'D' && s.loc == 'A'&& s.ms >= beginTime_ms && s.ms <= endTime_ms);
+
+    console.log(flows);
+    console.log(pressures);
+
+    // Note: The algorithm below relies on the fact that there is
+    // only one flow or pressure with a single ms value; and that
+    // increvementing an index necessarily incremenst the .ms value.
+
+    // Without two samples, we have no duration and can't define
+    // work.
+    if (pressures.length < 2 || flows.length < 2) return null;
+
+    var ct = Math.min(flows[0].ms,pressures[0].ms);
+    var lfp = { val : flows[0].val, ms: flows[0].ms } ; // last flow point
+    var lpp = { val : pressures[0].val, ms: pressures[0].ms }; // last pressure_point
+    var fi = increment_past(flows,ct,0); // Index of next flow sample
+    var pi = increment_past(pressures,ct,0); // Index of next pressure sample
+    var w = 0; // current work
+
+    // compute flow at time ms give index and last point
+    // This is just a simple linear interpolation
+    function f(ms,cur,last) {
+      var ms0 = last.ms;
+      var ms1 = cur.ms;
+      return last.val + (cur.val - last.val)*(ms - ms0)/(ms1 - ms0);
+    }
+    function increment_past(array,ms,index) {
+      while(index < array.length && array[index].ms <= ms)
+        index++;
+      if (index >= array.length)
+        return null;
+      else
+        return index;
+    }
+
+    while ((fi + pi) < (flows.length +  pressures.length)) {
+      // Invariant always increment fi or pi
+      // fi and pi point to unprocessed value
+      var ms;
+      if (pressures[pi].ms <= flows[fi].ms) { // process pressure
+        ms = pressures[pi].ms;
+        pi = increment_past(pressures,ms,pi);
+        if (flows[fi].ms <= ms) {
+          fi = increment_past(flows,ms,fi);
+        }
+      } else {
+        ms = flows[fi].ms;
+        fi = increment_past(flows,ms,fi);
+        if (pressures[pi].ms <= ms) {
+          pi = increment_past(pressures,ms,pi);
+        }
+      }
+      if ((fi === null) || (pi === null))
+        break;
+      var dur_s = (ms - ct) / 1000;
+      console.log("dur_s",dur_s);
+      var nf = f(ms,flows[fi],lfp);
+      var np = f(ms,pressures[pi],lpp);
+      var f1 = (lfp.val + nf)/2;
+      var p1 = (lpp.val + np)/2;
+      // convert 10ths of cm H2O to pascals..
+      var p1_pa = (p1 * 98.0665) / 10;
+
+      // convert flows in lpm to cubic meters per seconds
+      var f1_m_cubed_per_s = f1 / (1000 * 1000 * 60);
+
+      // work is now in Joules!
+      w += dur_s * p1_pa * f1_m_cubed_per_s;
+      lfp = { val : f1, ms: ms };
+      lpp = { val : p1, ms: ms };
+      ct = ms;
+    }
     console.log("begin transition time, end transition time:",beginTime_ms,endTime_ms);
+
+    console.log("ms,w",ms,w);
     //var pressureVolume_prod= 0;
     //for(var j = a; j < z-1; j++) {
     //  // I'll use qadrilateral approximation.
@@ -1449,17 +1523,80 @@ function compute_current_TRIP(TRIP_min,TRIP_max, samples)
     fAv_lpm /= flows.length;
     console.log("flows:",flows,"\npressures:",pressures)
     console.log("pAv, vAv = ",pAv_cm,fAv_lpm);
-    var flow_cubicMetersPerSecond = fAv_lpm/1000/60; //lpm to cmps 
+    var flow_cubicMetersPerSecond = fAv_lpm/1000/60; //lpm to cmps
     var avPower = pressures_pascales*flow_cubicMetersPerSecond; // Watts
     var avWork = avPower * (endTime_ms - beginTime_ms)/1000; // Joules
+
+
     console.log("Power (Watts):",avPower);
     console.log("Work (Joules):",avWork);
-    return avWork;
+
+    console.log("ms, Work main (Joules)",ms,w);
+    return w;
+  }
+}
+
+// Let's first set up a perfectly square 1-second
+function generate_synthetic_trace() {
+  const SAMPLES_PER_PHASE = 1000;
+  const SAMPLES_MS_PER_SAMPLE = 1;
+  var trace = [];
+  var cur = 0;
+  function push_samples(start,num,d,f) {
+    for(var i = start; i < start+num; i++) {
+      trace.push(
+      {
+        event: "M",
+        loc: "A",
+        ms: i,
+        num: 0,
+        type: "D",
+        val: d
+      });
+      trace.push(
+      {
+        event: "M",
+        loc: "A",
+        ms: i,
+        num: 0,
+        type: "F",
+        val: f
+      });
     }
   }
-  
+  push_samples(0,SAMPLES_PER_PHASE,-200,-50000);
+  push_samples(SAMPLES_PER_PHASE,SAMPLES_PER_PHASE,200,50000);
+  push_samples(SAMPLES_PER_PHASE*2,SAMPLES_PER_PHASE,-200,-50000);
+  push_samples(SAMPLES_PER_PHASE*3,SAMPLES_PER_PHASE,200,50000);
+  return trace;
+}
 
 
+function testWorkSynthetic(){ // breaths give us inspiration transition points
+  var samples = generate_synthetic_trace();
+
+  const JOULES_IN_BREATH = 1 * 1961.33 * 50000 / (60e+6);
+
+
+  var flows = samples.filter(s => s.event == 'M' && s.type == 'F');
+    var first_time = flows[0].ms;
+    var last_time = flows[flows.length - 1].ms;
+    var duration = last_time - first_time;
+    console.log(flows);
+
+
+  const vm = 10;
+  // There is a problem here that this does not create a transition at the beginning.
+  var transitions = compute_transitions(vm,flows);
+    var breaths = compute_breaths_based_without_negative_flow(transitions,flows);
+    console.log(breaths);
+    for(i = 0; i<breaths.length; i++) {
+      var w = PressureVolumeWork(breaths[i], transitions, samples);
+      console.assert((w == null) || (w == JOULES_IN_BREATH));
+      console.log("final = ",w);
+    }
+
+}
 
 
   function testWork(samples){ // breaths give us inspiration transition points
@@ -1516,7 +1653,7 @@ function compute_current_TRIP(TRIP_min,TRIP_max, samples)
   // that level of sophistication needed.
   // We still want to track zeros, but now must strack them
   // as a falling signal.
-  
+
   function compute_breaths_based_without_negative_flow(transitions,flows) {
     var beg = 0;
     var zero = 0;
