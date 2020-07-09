@@ -11,6 +11,8 @@ well as calculated values such as tidal volume.
 You can see the vent-display from our [public data lake](http://ventmon.coslabs.com/), where you 
 can find both live and [static](http://ventmon.coslabs.com/breath_plot?i=71.245.238.32.test_file_name.20200612135337) displays.
 
+For a hands on demonstration of Vent Display and in-depth explanation of VentMon watch our screen cast (demonstration of Vent Display occurrs at 10:56).    
+[VentMon ScreenCast](https://www.youtube.com/watch?v=OV9MrMjVOCI)
 
 # Vounteer Needed
 
