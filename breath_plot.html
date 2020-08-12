@@ -30,11 +30,25 @@ Breath Plot: COVID-19 Respiration Analysis Software
 
   <script src='js/respiration_math.js'></script>
 
-
     <title>Public Invention Respiration Analysis</title>
 
 </head>
   <style>
+#timetop {
+  display: flex;
+  flex-direction:row;
+  justify-content: space-between;
+  background: AliceBlue;
+}
+#leftjustify {
+  display: flex;
+  flex-direction:row;
+  justify-content: flex-start;
+}
+button {
+  margin-left: 10px;
+  margin-right: 10px;
+}
 #calcarea {
   flex-direction:column;
   background: AliceBlue;
@@ -166,24 +180,45 @@ an interactive or static analysis of a respiration. It&#39;s primary purpose is 
         <input type="text" class="form-control" id="samples_to_plot" aria-describedby="samples_to_plot">
       </div>
 
-
+<div>
   <label for="livetoggle">Plot Live:</label>
 <label class="switch">
   <input type="checkbox" id="livetoggle" checked>
   <span class="slider round"></span>
-</label>
+  </label>
+  <div id="leftjustify">
+  <button type="button" class="btn btn-primary">5s</button>
+  <button type="button" class="btn btn-primary">10s</button>
+  <button type="button" class="btn btn-primary">15s</button>
+  <button type="button" class="btn btn-primary">30s</button>
+  <button type="button" class="btn btn-primary">60s</button>
+  <button type="button" class="btn btn-primary">120s</button>
+  <button type="button" class="btn btn-primary">180s</button>
+  <button type="button" class="btn btn-primary">300s</button>
+</div>
+</div>
 
   <div class="container-fluid">
     <div class="row">
-          <div class="col-9">
+  <div class="col-9">
+  <div id="timetop">
+            <div class="alert alert-info" role="alert" id="time_start">
+            Time of first sample
+            </div>
+            <div class="alert alert-info" role="alert" id="time_finish">
+            Time of last sample
+</div>
+  </div>
+
             <div id='PFGraph'><!-- Pressure and Flow Graph --></div>
             <div id='EventsGraph'><!-- Events --></div>
           </div>
           <div class="col-3">
+
             <div class="alert alert-danger" role="alert" id="main_alert">
   Danger! Flow limits exceeded; volumes will be incorrect.
             </div>
-            <div class="container" id="calcarea">
+              <div class="container" id="calcarea">
               <div>
                 <label for="max">PIP (max): </label>
                   <div class="value_and_fences">
@@ -452,8 +487,9 @@ const urlParams = new URLSearchParams(queryString);
 var TRACE_ID = urlParams.get('i')
 var DSERVER_URL = window.location.protocol + "//" + window.location.host;
 var NUM_TO_READ = 500;
+var DESIRED_DURATION_S = 30;
 
-var DATA_RETRIEVAL_PERIOD = 50;
+var DATA_RETRIEVAL_PERIOD = 500;
 
 var RESPIRATION_RATE_WINDOW_SECONDS = 60;
 
@@ -463,6 +499,7 @@ var intervalID = null;
 // This sould be better as time, but is easier
 // to do as number of samples.
 var MAX_SAMPLES_TO_STORE_S = 16000;
+var MAX_REFRESH = false;
 var samples = [];
 var INITS_ONLY = true;
 
@@ -559,7 +596,7 @@ function samplesToLine(samples) {
     var fmin = Math.min(...fmillis);
     var fzeroed = fmillis.map(m =>(m-fmin)/1000.0);
 
-    var pressures = samples.filter(s => s.event == 'M' && s.type == 'D' && s.loc == 'A');
+  var pressures = samples.filter(s => s.event == 'M' && s.type == 'D' && (s.loc == 'A' || s.loc == 'I'));
 
     var pmillis = unpack(pressures, 'ms');
     var pmin = Math.min(...pmillis);
@@ -758,20 +795,20 @@ function plot(samples, trans, breaths) {
     // Now I will attempt to add other markers, such as Humidity, Altitude, and other events,
     // including possible warning events.
 
-    function gen_graph_measurement(samples, name, color, textposition, tp, lc, vf, tf) {
-      var selected = samples.filter(s => s.event == 'M' && s.type == tp && s.loc == lc);
+    function gen_graph_measurement(samples, name, color, textposition, tp, lc0, lc1, vf, tf) {
+      var selected = samples.filter(s => s.event == 'M' && s.type == tp && (s.loc == lc0 || s.loc == lc1));
       return gen_graph(selected, name, color, textposition, vf, tf);
     }
 
-    function gen_graph_measurement_timed(samples, name, color, textposition, tp, lc, vf, tf,time_window_ms) {
-      var messages = samples.filter(s => s.event == 'M' && s.type == tp && s.loc == lc);
+    function gen_graph_measurement_timed(samples, name, color, textposition, tp, lc0, lc1, vf, tf,time_window_ms) {
+      var messages = samples.filter(s => s.event == 'M' && s.type == tp && (s.loc == lc0 || s.loc == lc1));
       var separated = [];
       for(var i = 0; i < messages.length; i++) {
         var m = messages[i];
         if ((separated.length == 0) || ((separated.length > 0) && (separated[separated.length-1].ms < (m.ms - time_window_ms))))
           separated.push(m);
       }
-      return gen_graph_measurement(separated, name, color, textposition, tp, lc, vf, tf);
+      return gen_graph_measurement(separated, name, color, textposition, tp, lc0, lc1, vf, tf);
     }
 
     function gen_graph(selected,name,color, textposition, vf, tf) {
@@ -835,7 +872,7 @@ function plot(samples, trans, breaths) {
     {
       var fio2AirwayPlot = gen_graph_measurement_timed(samples,
                                                  "FiO2 (%)",
-                                                 "Black",'top center','O','A',
+                                                       "Black",'top center','O','I','A',
                                                  (s => s.val),
                                                  (v =>  "FiO2 (A): "+v.toFixed(1)+"%"),
                                                  // O2 reported only once every 10 seconds
@@ -844,28 +881,29 @@ function plot(samples, trans, breaths) {
     }
 
     {
-      var humAirwayPlot = gen_graph_measurement(samples,"Hum (%)","Aqua",'top center','H','A',
+      var humAirwayPlot = gen_graph_measurement(samples,"Hum (%)","Aqua",'top center','H','I','A',
                               (s => s.val/100.0),
                               (v =>  "H2O (A): "+v.toFixed(0)+"%"));
       event_graph.push(humAirwayPlot);
     }
 
     {
-      var humAmbientPlot = gen_graph_measurement(samples,"Hum (%)","CornflowerBlue",'bottom center','H','B',
+      // "null" here will never be matched, which is correct
+      var humAmbientPlot = gen_graph_measurement(samples,"Hum (%)","CornflowerBlue",'bottom center','H','B',null,
                               (s => -s.val/100.0),
                                       (v =>  "H2O (B): "+(-v).toFixed(0)+"%"));
       event_graph.push(humAmbientPlot);
     }
 
     {
-      var tempAirwayPlot = gen_graph_measurement(samples,"Temp A","red",'bottom center','T','A',
+      var tempAirwayPlot = gen_graph_measurement(samples,"Temp A","red",'bottom center','T','I','A',
                               (s => s.val/100.0),
                               (v =>  "T (A): "+v.toFixed(1)+"C"));
       event_graph.push(tempAirwayPlot);
     }
 
     {
-      var tempAmbientPlot = gen_graph_measurement(samples,"Temp B","orange",'top center','T','B',
+      var tempAmbientPlot = gen_graph_measurement(samples,"Temp B","orange",'top center','T','B',null,
                               (s => -s.val/100.0),
                                       (v =>  "T (B): "+(-v).toFixed(1)+"C"));
       event_graph.push(tempAmbientPlot);
@@ -873,7 +911,7 @@ function plot(samples, trans, breaths) {
 
     // Altitude is really just a check that the system is working
      {
-      var altAmbientPlot = gen_graph_measurement(samples,"Altitude","purple",'right','A','B',
+       var altAmbientPlot = gen_graph_measurement(samples,"Altitude","purple",'right','I','B',null,
                               (s => s.val/20.0),
                                       (v =>  "Alt: "+(v*20.0).toFixed(0)+"m"));
       event_graph.push(altAmbientPlot);
@@ -892,7 +930,7 @@ function plot(samples, trans, breaths) {
     // compared
 
     // {
-    //   var gasAirwayPlot = gen_graph_measurement(samples,"Gas A","yellow",'bottom center','G','A',
+    //   var gasAirwayPlot = gen_graph_measurement(samples,"Gas A","yellow",'bottom center','G','I',
     //                           (s => s.val/1000.0),
     //                                 (v =>  "G (A): "+(v*100).toFixed(1)+"Ohms"));
     //   event_graph.push(gasAirwayPlot);
@@ -1002,6 +1040,17 @@ function reflectAlarmsInGUI(alarms) {
     })
   });
 }
+const d = new Date();
+const TZ_OFFSET_MS = d.getTimezoneOffset()*60*1000;
+
+var LAST_SAMPLE_DATE;
+function get_date_of_sample(timestring,time_mark,ms) {
+  var d = new Date(timestring);
+  var t = d.getTime();
+  var tm = t - TZ_OFFSET_MS + (ms - time_mark);
+  return new Date(tm);
+}
+
 
 function process(samples) {
   const t = 200; // size of the window is 200ms
@@ -1095,6 +1144,43 @@ function process(samples) {
    }
 
   reflectAlarmsInGUI(alarms);
+
+  // Return date in UTC time (as it comes to us)
+  function time_of_extreme_samples(samples) {
+    var messages = samples.filter(s => s.event == 'E' && s.type == 'C');
+    // if our traces don't have monotone ms fields, this is an
+    // unrecoverable error...
+    var cur = 0;
+    for(var i = 0; i < samples.length; i++) {
+      if (samples[i].ms <= 0) { // This is an error!!!
+        console.log("error, non-monotonic ms times");
+        return [null,null];
+      }
+      cur = samples[i].ms;
+    }
+    var first_ms = samples[0].ms;
+    var last_ms = samples[samples.length-1].ms;
+
+
+    if (messages.length == 0) {
+      return [null,null];
+    } else {
+      // We may need this to be more sophisticated; the is coming in
+      // from the PIRDS_webcgi as "Sat Jun 27 23:13:08 2020"
+      var timestring = messages[messages.length - 1].buff;
+      var time_mark = messages[messages.length - 1].ms;
+
+
+      return [get_date_of_sample(timestring,time_mark,first_ms),
+              get_date_of_sample(timestring,time_mark,last_ms)];
+    }
+  }
+  var [start,finish] = time_of_extreme_samples(samples);
+  $("#time_start").text((start) ? start.toISOString() : null);
+  $("#time_finish").text((finish) ? finish.toISOString() : null);
+  LAST_SAMPLE_DATE = finish;
+  console.log("process",start);
+  console.log("process",finish);
 }
 
 // WARNING: This is a hack...if the timestamp is negative,
@@ -1121,24 +1207,59 @@ function sanitize_samples(samples) {
   return samples;
 }
 
+// TODO: This is bad when it fires another request while a request is in play.
 function retrieveAndPlot(){
   var trace_piece = (TRACE_ID) ? "/" + TRACE_ID : "";
   DSERVER_URL = $("#dserverurl").val();
-  var url =  DSERVER_URL + trace_piece + "/json?n="+ NUM_TO_READ;
+  var url;
+  if ((MAX_REFRESH || samples.length == 0) || !LAST_SAMPLE_DATE) {
+    url =  DSERVER_URL + trace_piece + "/json?n="+ MAX_SAMPLES_TO_STORE_S;
+  } else {
+    url = DSERVER_URL + trace_piece + "/json?n="+  NUM_TO_READ +
+      "&t=" + encodeURIComponent(LAST_SAMPLE_DATE.toUTCString());
+  }
 
+  // I am here attempting to change the behavior based on whether
+  // we are "live" or not. If we are live, we take the duration
+  // backwards from the current moment in time.
+  // If we are not live, we take the duration forward from the start
+  // sample field. We will use "a" for the start time, "z" for the
+  // finish time, n for the maximum number to read, and "d" for
+  // the duration in ms.
+  var REQUEST_FINAL_SAMPLE;
+  if (intervalID  && LAST_SAMPLE_DATE) {
+    console.log("BEGIN",LAST_SAMPLE_DATE);
+    var currentDate = new Date();
+    var t = currentDate.getTime();
+    var tm = t - DESIRED_DURATION_S*1000;
+    var t_max = Math.max(tm,LAST_SAMPLE_DATE.getTime());
+    var date_minus_duration = new Date(t_max);
+    url = DSERVER_URL + trace_piece + "/json?n="+  NUM_TO_READ +
+      "&a=" + encodeURIComponent(date_minus_duration.toUTCString()) +
+      "&z=" + encodeURIComponent(currentDate.toUTCString());
+    REQUEST_FINAL_SAMPLE = currentDate;
+    console.log("A",date_minus_duration);
+    console.log("Z",currentDate);
+  } else {
+  }
+  console.log("url =",url);
   $.ajax({url: url,
           success: function(cur_sam){
 
-              // WARNING: This is a hack...if the timestamp is negative,
-              // we treat it as a limited (beyond range of sensor) measurement.
-              // Our goal is to warn about this, but for now we will just
+            // WARNING: This is a hack...if the timestamp is negative,
+            // we treat it as a limited (beyond range of sensor) measurement.
+            // Our goal is to warn about this, but for now we will just
             // ignore and correct.
+            MAX_REFRESH = false;
             if (cur_sam == null) {
               console.log("No return");
               return;
             }
+            console.log("returned ",cur_sam.length);
             if (cur_sam && cur_sam.length == 0) {
-              console.log("no samples; potential misconfiguration!");
+              // This is no longer true now that we are asking for time...
+              //   console.log("no samples; potential misconfiguration!");
+              LAST_SAMPLE_DATE = REQUEST_FINAL_SAMPLE;
             } else {
               if (typeof(cur_sam) == "string") {
                 console.log("Error!");
@@ -1159,374 +1280,48 @@ function retrieveAndPlot(){
 	        samples = samples.concat(cur_sam);
 	        // We are not guaranteeed to get samples in order
 	        // we sort them....
-	        samples = samples.sort((a,b) => a.ms - b.ms);
-                process(samples);
+                // We also need to de-dup them.
+                // This would be more efficient if done after sorting..
+                var n = samples.length;
+
+                samples = samples.filter((s, index, self) =>
+                                         self.findIndex(t => t.ms === s.ms
+                                                        && t.type === s.type
+                                                        && t.loc === s.loc
+                                                        && t.num === s.num
+                                                        && t.event === s.event
+                                                        && t.val === s.val) === index);
               }
+              samples = samples.filter((s, index, self) =>
+                                       self.findIndex(t => t.ms === s.ms
+                                                      && t.type === s.type
+                                                      && t.loc === s.loc
+                                                      && t.num === s.num
+                                                      && t.event === s.event
+                                                      && t.val === s.val) === index);
+              if (n != samples.length) {
+                console.log("deduped:",n-samples.length);
+              }
+
+	      samples = samples.sort((a,b) => a.ms - b.ms);
+              // Now we will trim off samples if we are live...
+              if (intervalID) {
+                var last_ms = samples[samples.length-1].ms
+                samples = samples.filter((s, index, self) =>
+                                         s.ms >= (last_ms - DESIRED_DURATION_S*1000));
+              }
+              process(samples);
+              console.log("END",LAST_SAMPLE_DATE);
             }
           },
           error: function(xhr, ajaxOptions, thrownError) {
 	    console.log("Error!" + xhr.status);
 	    console.log(thrownError);
-            //            clearInterval(intervalID);
             stop_interval_timer();
             $("#livetoggle").prop("checked",false);
           }
          });
 }
-
-
-
-
-
-//   // A routine to calculate work per breath
-// function PressureVolumeWork(breath, transitions, samples) {
-//   // -1 for quadilateral approximation
-//   if (breath.vol_i == 0) {
-//     return null;
-//   } else {
-//     var beginTransition = transitions[breath.trans_begin_inhale];
-//     var beginTime_ms = beginTransition.ms;
-//     var endTransition = transitions[breath.trans_cross_zero];
-//     var endTime_ms = endTransition.ms;
-//     var flows = samples.filter(s => s.event == 'M' && s.type == 'F' &&
-//                                s.ms >= beginTime_ms && s.ms <= endTime_ms);
-//     var pressures = samples.filter(s => s.event == 'M' && s.type == 'D' &&
-//                                    s.loc == 'A'&& s.ms >= beginTime_ms && s.ms <= endTime_ms);
-
-//     // Note: The algorithm below relies on the fact that there is
-//     // only one flow or pressure with a single ms value; and that
-//     // increvementing an index necessarily incremenst the .ms value.
-
-//     // Without two samples, we have no duration and can't define
-//     // work.
-//     if (pressures.length < 2 || flows.length < 2) return null;
-
-//     var ct = Math.min(flows[0].ms,pressures[0].ms);
-//     var lfp = { val : flows[0].val, ms: flows[0].ms } ; // last flow point
-//     var lpp = { val : pressures[0].val, ms: pressures[0].ms }; // last pressure_point
-//     var fi = increment_past(flows,flows[0].ms,0); // Index of next flow sample
-//     var pi = increment_past(pressures,pressures[0].ms,0); // Index of next pressure sample
-//     var w = 0; // current work
-
-//     // compute flow at time ms give index and last point
-//     // This is just a simple linear interpolation
-//     function f(ms,cur,last) {
-//       var ms0 = last.ms;
-//       var ms1 = cur.ms;
-//       return last.val + (cur.val - last.val)*(ms - ms0)/(ms1 - ms0);
-//     }
-//     function increment_past(array,ms,index) {
-//       var begin = index;
-//       while(index < array.length && array[index].ms <= ms)
-//         index++;
-//       if (index == begin) debugger;
-//       if (index >= array.length)
-//         return null;
-//       else
-//         return index;
-//     }
-
-//     // A fundamental invariant:
-//     // pressures[pi].ms > lpp.ms
-//     // flows[pi].ms > lfp.ms
-//     while ((fi + pi) < (flows.length +  pressures.length)) {
-//       // Invariant always increment fi or pi
-//       // fi and pi point to unprocessed value
-//       console.assert(pressures[pi].ms > lpp.ms);
-//       console.assert(flows[fi].ms > lfp.ms);
-//       var ms;
-//       if (pressures[pi].ms <= flows[fi].ms) { // process pressure
-//         ms = pressures[pi].ms;
-//         pi = increment_past(pressures,ms,pi);
-//         if (flows[fi].ms <= ms) {
-//           fi = increment_past(flows,ms,fi);
-//         }
-//       } else {
-//         ms = flows[fi].ms;
-//         fi = increment_past(flows,ms,fi);
-//         if (pressures[pi].ms <= ms) {
-//           pi = increment_past(pressures,ms,pi);
-//         }
-//       }
-//       if ((fi === null) || (pi === null))
-//         break;
-//       var dur_s = (ms - ct) / 1000;
-//       console.assert(pressures[pi].ms > lpp.ms);
-//       console.assert(flows[fi].ms > lfp.ms);
-//       var nf = f(ms,flows[fi],lfp);
-//       var np = f(ms,pressures[pi],lpp);
-//       var f1 = (lfp.val + nf)/2;
-//       var p1 = (lpp.val + np)/2;
-//       // convert 10ths of cm H2O to pascals..
-//       var p1_pa = (p1 * 98.0665) / 10;
-
-//       // convert flows in lpm to cubic meters per seconds
-//       var f1_m_cubed_per_s = f1 / (1000 * 1000 * 60);
-
-//       // work is now in Joules!
-//       w += dur_s * p1_pa * f1_m_cubed_per_s;
-//       lfp = { val : f1, ms: ms };
-//       lpp = { val : p1, ms: ms };
-//       ct = ms;
-//     }
-//     return w;
-//   }
-// }
-
-// // Let's first set up a perfectly square 1-second
-// function generate_synthetic_trace() {
-//   const SAMPLES_PER_PHASE = 1000;
-//   const SAMPLES_MS_PER_SAMPLE = 1;
-//   var trace = [];
-//   var cur = 0;
-//   // p is a probability of occuring.
-//   function push_samples(start,num,d,f,pd,pf) {
-//     for(var i = start; i < start+num; i++) {
-//       if (Math.random() < pd) {
-//         trace.push(
-//           {
-//             event: "M",
-//             loc: "A",
-//             ms: i,
-//             num: 0,
-//             type: "D",
-//             val: d
-//           });
-//       }
-//       if (Math.random() < pf) {
-//         trace.push(
-//           {
-//             event: "M",
-//             loc: "A",
-//             ms: i,
-//             num: 0,
-//             type: "F",
-//             val: f
-//           });
-//       }
-//     }
-//   }
-//   const P1 = 1/2;
-//   const P2 = 1/2;
-//   push_samples(SAMPLES_PER_PHASE,SAMPLES_PER_PHASE,200,50000,P1,P2);
-//   push_samples(0,SAMPLES_PER_PHASE,-200,-50000,P1,P2);
-//   push_samples(SAMPLES_PER_PHASE,SAMPLES_PER_PHASE,200,50000,P1,P2);
-//   push_samples(SAMPLES_PER_PHASE*2,SAMPLES_PER_PHASE,-200,-50000,P1,P2);
-//   push_samples(SAMPLES_PER_PHASE*3,SAMPLES_PER_PHASE,200,50000,P1,P2);
-//   return trace;
-// }
-
-// function nearp(x,y,d) {
-//   return Math.abs(x - y) <= d;
-// }
-
-// function testWorkSynthetic(){ // breaths give us inspiration transition points
-//   var samples = generate_synthetic_trace();
-
-//   const JOULES_IN_BREATH = 1 * 1961.33 * 50000 / (60e+6);
-
-//   var flows = samples.filter(s => s.event == 'M' && s.type == 'F');
-//     var first_time = flows[0].ms;
-//     var last_time = flows[flows.length - 1].ms;
-//     var duration = last_time - first_time;
-//     console.log(flows);
-
-
-//   const vm = 10;
-//   // There is a problem here that this does not create a transition at the beginning.
-//   var transitions = compute_transitions(vm,flows);
-//     var breaths = compute_breaths_based_without_negative_flow(transitions,flows);
-//     console.log(breaths);
-//     for(i = 0; i<breaths.length; i++) {
-//       var w = PressureVolumeWork(breaths[i], transitions, samples);
-//       console.assert((w == null) || (nearp(w,JOULES_IN_BREATH),0.1));
-//       console.log("final (Joules) = ",w);
-//     }
-//   return true;
-// }
-
-
-//   function testWork(samples){ // breaths give us inspiration transition points
-//     var flows = samples.filter(s => s.event == 'M' && s.type == 'F');
-//     var first_time = flows[0].ms;
-//     var last_time = flows[flows.length - 1].ms;
-//     var duration = last_time - first_time;
-//     console.log(flows);
-
-//     const vm = 10;
-//     var transitions = compute_transitions(vm,flows);
-//     var breaths = compute_breaths_based_without_negative_flow(transitions,flows);
-//     console.log(breaths);
-//     for(i = 0; i<breaths.length; i++) {
-//       var w = PressureVolumeWork(breaths[i], transitions, samples);
-//       console.log(w);
-//     }
-//    }
-
-
-
-  // // This should be in liters...
-  // function integrateSamples(a,z,flows) {
-  //   // -1 for quadilateral approximation
-  //   var vol = 0;
-  //   for(var j = a; j < z-1; j++) {
-  //     // I'll use qadrilateral approximation.
-  //     // We'll form each quadrilateral between two samples.
-  //     var ms = flows[j+1].ms - flows[j].ms;
-  //     var ht = ((flows[j+1].val + flows[j].val )/2) * CONVERT_PIRDS_TO_SLM;
-  //     // Flow is actually in standard liters per minute,
-  //     // so to get liters we divide by 60 to it l/s,
-  //     // and and divde by 1000 to convert ms to seconds.
-  //     // We could do that here, but will move constants
-  //     // to end...
-  //     vol += ms * ht;
-  //     if (isNaN(vol)) {
-  //       debugger;
-  //     }
-  //   }
-  //   return vol/(60*1000);
-  // }
-
-  // This is based only on inhalations, and
-  // is therefore functional when there is a check valve
-  // in place. Such a system will rarely
-  // have negative flows, and we must mark
-  // the beginning of a breath from a transition to a "1"
-  // state from any other state.
-  // This algorithm is simple: A breath begins on a trasition
-  // to 1 from a not 1 state. This algorithm is susceptible
-  // to "stutter" near the boundary point, but if necessary
-  // a digital filter would sove that; we have not yet found
-  // that level of sophistication needed.
-  // We still want to track zeros, but now must strack them
-  // as a falling signal.
-
-  // function compute_breaths_based_without_negative_flow(transitions,flows) {
-  //   var beg = 0;
-  //   var zero = 0;
-  //   var last = 0;
-  //   var voli = 0;
-  //   var vole = 0;
-
-  //   var breaths = [];
-  //   var expiring = true;
-
-  //   for(var i = 0; i < transitions.length; i++) {
-  //     // We're looking for the end of the inhalation here!!
-  //     if (((i -1) >= 0) && transitions[i-1].state == 1 &&
-  //         (transitions[i].state == 0 || transitions[i].state == -1 )) {
-  //       zero = i;
-  //     }
-  //     if (expiring && transitions[i].state == 1) {
-  //       breaths.push({ ms: transitions[i].ms,
-  //       	       sample: transitions[i].sample,
-  //       	       vol_e: vole,
-  //       	       vol_i: voli,
-  //                      trans_begin_inhale: beg,
-  //                      trans_cross_zero: zero,
-  //                      trans_end_exhale: i,
-  //       	     }
-  //       	    );
-  //       var w = PressureVolumeWork(breaths[breaths.length-1], transitions, samples);
-  //       breaths[breaths.length-1].work = w;
-  //       beg = i;
-  //       expiring = false;
-  //       vole = integrateSamples(last,transitions[i].sample,flows);
-
-  //       last = transitions[i].sample;
-  //     }
-  //     if (!expiring && ((transitions[i].state == -1) || (transitions[i].state == 0)))  {
-  //       expiring = true;
-  //       voli = integrateSamples(last,transitions[i].sample,flows);
-  //       last = transitions[i].sample;
-  //     }
-  //   }
-  //   return breaths;
-  // }
-
-
-// // A simple computation of a moving window trace
-// // computing [A + -B], where A is volume to left
-// // of sample int time window t, and B is volume to right
-// // t is in milliseconds
-// function computeMovingWindowTrace(samples,t,v) {
-
-//   var flows = samples.filter(s => s.event == 'M' && s.type == 'F');
-//   var first_time = flows[0].ms;
-//   var last_time = flows[flows.length - 1].ms;
-//   var duration = last_time - first_time;
-
-//   // Here is an idea...
-//   // We define you to be in one of three states:
-//   // Inspiring, expiring, or neither.
-//   // Every transition between these states is logged.
-//   // Having two inspirations between an expiration is
-//   // weird but could happen.
-//   // We record transitions.
-//   // When the time series crossed a fixed threshold
-//   // or zero, it causes a transition. If you are inspiring,
-//   // you have to cross zero to transition to neither,
-//   // and you start expiring when you cross the treshold.
-
-//   // This is measured in standard liters per minute.
-//   const vm = 10; // previously used 4
-
-//   // We will model this as a list of transitions.
-//   // A breath is any number of inspirations followed by
-//   // any number of expirations. (I+)(E+)
-
-//   var transitions = compute_transitions(vm,flows);
-
-//   // Now that we have transitions, we can apply a
-//   // diferrent algorithm to try to define "breaths".
-//   // Because a breath is defined as an inspiration
-//   // and then an expiration, we will define a breath
-//   // as from the first inspiration, until there has
-//   // been one expiration, until the next inspiration.
-//   var breaths = [];
-//   var expiring = false;
-
-//   function compute_breaths_based_on_exhalations(transitions) {
-//     var beg = 0;
-//     var zero = 0;
-//     var last = 0;
-//     var voli = 0;
-//     var vole = 0;
-
-//     for(var i = 0; i < transitions.length; i++) {
-//       // We're looking for the end of the inhalation here!!
-//       if (((i -1) >= 0) && transitions[i-1].state == 1 && (transitions[i].state == 0 || transitions[i].state == -1 )) {
-//         zero = i;
-//       }
-//       if (expiring && transitions[i].state == 1) {
-//         breaths.push({ ms: transitions[i].ms,
-// 		       sample: transitions[i].sample,
-// 		       vol_e: vole,
-// 		       vol_i: voli,
-//                        trans_begin_inhale: beg,
-//                        trans_cross_zero: zero,
-//                        trans_end_exhale: i,
-// 		     }
-// 		    );
-//         var w = PressureVolumeWork(breaths[0], transitions, samples);
-//         breaths[0].work = w;
-//         beg = i;
-//         expiring = false;
-//         vole = integrateSamples(last,transitions[i].sample,flows);
-//         last = transitions[i].sample;
-//       }
-//       if (!expiring && transitions[i].state == -1) {
-//         expiring = true;
-//         voli = integrateSamples(last,transitions[i].sample,flows);
-//         last = transitions[i].sample;
-//       }
-//     }
-//   }
-
-//   breaths = compute_breaths_based_without_negative_flow(transitions,flows);
-
-//   return [transitions,breaths];
-// }
 
 
 $("#useofficial").click(function() {
@@ -1596,6 +1391,15 @@ $( document ).ready(function() {
     DSERVER_URL = "http://localhost";
 
 
+  $("button").click(function(event)
+                    {
+                      var a = event.currentTarget.innerText.split("s");
+                      console.log(a[0]);
+                      DESIRED_DURATION_S = a[0];
+                      console.dir(DESIRED_DURATION_S);
+                    });
+
+
   $( "#dserverurl" ).val( DSERVER_URL );
   $('#dserverurl').change(function () {
     DSERVER_URL = $("#dserverurl").val();
@@ -1612,6 +1416,7 @@ $( document ).ready(function() {
   $( "#samples_to_plot" ).val( MAX_SAMPLES_TO_STORE_S );
   $('#samples_to_plot').change(function () {
     MAX_SAMPLES_TO_STORE_S = $("#samples_to_plot").val();
+    MAX_REFRESH = true;
   });
 
   samples = init_samples();

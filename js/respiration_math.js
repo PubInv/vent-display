@@ -62,7 +62,7 @@ function compute_transitions(vm,flows) {
 
 // Return, [min,avg,max] pressures (no smoothing)!
 function compute_pressures(secs,samples,alarms,limits) {
-  var pressures = samples.filter(s => s.event == 'M' && s.type == 'D' && s.loc == 'A');
+  var pressures = samples.filter(s => s.event == 'M' && s.type == 'D' && (s.loc == 'I' || s.loc == 'A'));
 
   if (pressures.length == 0) {
     return [0,0,0,[]];
@@ -97,7 +97,7 @@ function compute_pressures(secs,samples,alarms,limits) {
 
 
 function compute_fio2_mean(secs,samples) {
-  var oxygens = samples.filter(s => s.event == 'M' && s.type == 'O' && s.loc == 'A');
+  var oxygens = samples.filter(s => s.event == 'M' && s.type == 'O' && (s.loc == 'I' || s.loc == 'A'));
 
   if (oxygens.length == 0) {
     return null;
@@ -206,7 +206,7 @@ function compute_respiration_rate(secs,samples,transitions,breaths) {
 // taip == true implies compute TAIP, else compute TRIP
 // Possibly this routine should be generalized to a general rise-time routine.
 function compute_TAIP_or_TRIP_signals(min,max,pressures,taip) {
-  var pressures = pressures.filter(s => s.event == 'M' && s.type == 'D' && s.loc == 'A');
+  var pressures = pressures.filter(s => s.event == 'M' && s.type == 'D' && (s.loc == 'I' || s.loc == 'A'));
   const responseBegin = 0.1;
   const responseEnd = 0.9;
 
@@ -268,11 +268,11 @@ function testdata(){
   var data = []; // pushing 50 things into it
   for(var i = 0; i < 10; i++) {
     var ms = i*5*10;
-    data[i*5+0] = {event:'M',loc:'A',ms:ms + 0,type:'D',val: 0};
-    data[i*5+1] = {event:'M',loc:'A',ms:ms + 10,type:'D',val: 100};
-    data[i*5+2] = {event:'M',loc:'A',ms:ms + 20,type:'D',val: 200};
-    data[i*5+3] = {event:'M',loc:'A',ms:ms + 30,type:'D',val: 100};
-    data[i*5+4] = {event:'M',loc:'A',ms:ms + 40,type:'D',val: 0};
+    data[i*5+0] = {event:'M',loc:'I',ms:ms + 0,type:'D',val: 0};
+    data[i*5+1] = {event:'M',loc:'I',ms:ms + 10,type:'D',val: 100};
+    data[i*5+2] = {event:'M',loc:'I',ms:ms + 20,type:'D',val: 200};
+    data[i*5+3] = {event:'M',loc:'I',ms:ms + 30,type:'D',val: 100};
+    data[i*5+4] = {event:'M',loc:'I',ms:ms + 40,type:'D',val: 0};
   }
   return data;
 }
@@ -283,7 +283,7 @@ function testdataSine(period_sm){ // period expressed in # of samples, each samp
   var data = []; // pushing 50 things into it
   for(var i = 0; i < 1000; i++) {
     var ms = i*10;
-    data[i] = {event:'M',loc:'A',ms:ms + 20,type:'D',val: 200*Math.sin(2*Math.PI*i/period_sm)};
+    data[i] = {event:'M',loc:'I',ms:ms + 20,type:'D',val: 200*Math.sin(2*Math.PI*i/period_sm)};
   }
   return data;
 }
@@ -370,7 +370,7 @@ function PressureVolumeWork(breath, transitions, samples) {
     var flows = samples.filter(s => s.event == 'M' && s.type == 'F' &&
                                s.ms >= beginTime_ms && s.ms <= endTime_ms);
     var pressures = samples.filter(s => s.event == 'M' && s.type == 'D' &&
-                                   s.loc == 'A'&& s.ms >= beginTime_ms && s.ms <= endTime_ms);
+                                   (s.loc == 'I' || s.loc == 'A') && s.ms >= beginTime_ms && s.ms <= endTime_ms);
 
     // Note: The algorithm below relies on the fact that there is
     // only one flow or pressure with a single ms value; and that
