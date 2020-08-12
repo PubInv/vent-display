@@ -461,6 +461,31 @@ an interactive or static analysis of a respiration. It&#39;s primary purpose is 
 
   <script>
 
+// I want a function to print times without milliseconds!!!!
+
+if (!Date.prototype.toISOStringSeconds) {
+  (function() {
+
+    function pad(number) {
+      if (number < 10) {
+        return '0' + number;
+      }
+      return number;
+    }
+
+    Date.prototype.toISOStringSeconds = function() {
+      return this.getUTCFullYear() +
+        '-' + pad(this.getUTCMonth() + 1) +
+        '-' + pad(this.getUTCDate()) +
+        'T' + pad(this.getUTCHours()) +
+        ':' + pad(this.getUTCMinutes()) +
+        ':' + pad(this.getUTCSeconds()) +
+        'Z';
+    };
+
+  })();
+}
+
 var TAIP_AND_TRIP_MIN = 2;
 var TAIP_AND_TRIP_MAX = 8;
 
@@ -874,7 +899,7 @@ function plot(samples, trans, breaths) {
                                                  "FiO2 (%)",
                                                        "Black",'top center','O','I','A',
                                                  (s => s.val),
-                                                 (v =>  "FiO2 (A): "+v.toFixed(1)+"%"),
+                                                 (v =>  "FiO2 : "+v.toFixed(1)+"%"),
                                                  // O2 reported only once every 10 seconds
                                                 SAMPLES_BETWEEN_FIO2_REPORTS);
       event_graph.push(fio2AirwayPlot);
@@ -883,7 +908,7 @@ function plot(samples, trans, breaths) {
     {
       var humAirwayPlot = gen_graph_measurement(samples,"Hum (%)","Aqua",'top center','H','I','A',
                               (s => s.val/100.0),
-                              (v =>  "H2O (A): "+v.toFixed(0)+"%"));
+                              (v =>  "H2O : "+v.toFixed(0)+"%"));
       event_graph.push(humAirwayPlot);
     }
 
@@ -898,7 +923,7 @@ function plot(samples, trans, breaths) {
     {
       var tempAirwayPlot = gen_graph_measurement(samples,"Temp A","red",'bottom center','T','I','A',
                               (s => s.val/100.0),
-                              (v =>  "T (A): "+v.toFixed(1)+"C"));
+                              (v =>  "T (I): "+v.toFixed(1)+"C"));
       event_graph.push(tempAirwayPlot);
     }
 
@@ -923,26 +948,6 @@ function plot(samples, trans, breaths) {
        event_graph.push(h);
        event_graph.push(o);
      }
-
-
-
-    // The BME680 sensor detects VOC gases. I don't think has any clinical value
-    // compared
-
-    // {
-    //   var gasAirwayPlot = gen_graph_measurement(samples,"Gas A","yellow",'bottom center','G','I',
-    //                           (s => s.val/1000.0),
-    //                                 (v =>  "G (A): "+(v*100).toFixed(1)+"Ohms"));
-    //   event_graph.push(gasAirwayPlot);
-    // }
-
-    // {
-    //   var gasAmbientPlot = gen_graph_measurement(samples,"Gas B","gold",'top center','G','B',
-    //                           (s => -s.val/1000.0),
-    //                                   (v =>  "G (B): "+(-v*100).toFixed(1)+"Ohms"));
-    //   event_graph.push(gasAmbientPlot);
-    // }
-
 
 
     // I'm going to try putting the pressure
@@ -1176,8 +1181,8 @@ function process(samples) {
     }
   }
   var [start,finish] = time_of_extreme_samples(samples);
-  $("#time_start").text((start) ? start.toISOString() : null);
-  $("#time_finish").text((finish) ? finish.toISOString() : null);
+  $("#time_start").text((start) ? start.toISOStringSeconds() : null);
+  $("#time_finish").text((finish) ? finish.toISOStringSeconds() : null);
   LAST_SAMPLE_DATE = finish;
   console.log("process",start);
   console.log("process",finish);
@@ -1228,7 +1233,7 @@ function retrieveAndPlot(){
   // the duration in ms.
   var REQUEST_FINAL_SAMPLE;
   if (intervalID  && LAST_SAMPLE_DATE) {
-    console.log("BEGIN",LAST_SAMPLE_DATE);
+//    console.log("BEGIN",LAST_SAMPLE_DATE);
     var currentDate = new Date();
     var t = currentDate.getTime();
     var tm = t - DESIRED_DURATION_S*1000;
@@ -1238,11 +1243,11 @@ function retrieveAndPlot(){
       "&a=" + encodeURIComponent(date_minus_duration.toUTCString()) +
       "&z=" + encodeURIComponent(currentDate.toUTCString());
     REQUEST_FINAL_SAMPLE = currentDate;
-    console.log("A",date_minus_duration);
-    console.log("Z",currentDate);
+//    console.log("A",date_minus_duration);
+//    console.log("Z",currentDate);
   } else {
   }
-  console.log("url =",url);
+//  console.log("url =",url);
   $.ajax({url: url,
           success: function(cur_sam){
 
@@ -1255,7 +1260,7 @@ function retrieveAndPlot(){
               console.log("No return");
               return;
             }
-            console.log("returned ",cur_sam.length);
+  //          console.log("returned ",cur_sam.length);
             if (cur_sam && cur_sam.length == 0) {
               // This is no longer true now that we are asking for time...
               //   console.log("no samples; potential misconfiguration!");
