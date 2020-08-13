@@ -1184,8 +1184,8 @@ function process(samples) {
   $("#time_start").text((start) ? start.toISOStringSeconds() : null);
   $("#time_finish").text((finish) ? finish.toISOStringSeconds() : null);
   LAST_SAMPLE_DATE = finish;
-  console.log("process",start);
-  console.log("process",finish);
+//  console.log("process",start);
+//  console.log("process",finish);
 }
 
 // WARNING: This is a hack...if the timestamp is negative,
@@ -1247,7 +1247,7 @@ function retrieveAndPlot(){
 //    console.log("Z",currentDate);
   } else {
   }
-//  console.log("url =",url);
+//  console.log("url =",decodeURI(url));
   $.ajax({url: url,
           success: function(cur_sam){
 
@@ -1260,7 +1260,7 @@ function retrieveAndPlot(){
               console.log("No return");
               return;
             }
-  //          console.log("returned ",cur_sam.length);
+//            console.log("returned ",cur_sam.length,cur_sam);
             if (cur_sam && cur_sam.length == 0) {
               // This is no longer true now that we are asking for time...
               //   console.log("no samples; potential misconfiguration!");
@@ -1270,13 +1270,20 @@ function retrieveAndPlot(){
                 console.log("Error!");
                 stop_interval_timer();
                 $("#livetoggle").prop("checked",false);
-                console.log(cur_sam);
+//                console.log(cur_sam);
               } else {
                 cur_sam = sanitize_samples(cur_sam);
 	        if (INITS_ONLY) {
 	          samples = cur_sam;
 	          INITS_ONLY = false;
 	        } else {
+
+                  var first_new_ms = cur_sam[0].ms;
+                  var cur_first_ms = samples[0].ms;
+                  if (first_new_ms < cur_first_ms) { // This means a reset of the Arduino, we will dump samples..
+                    samples = [];
+                    console.log("DETECTED ARDUINO RESET, DUMPING CURRENT SAMPLES");
+                  }
                   var discard = Math.max(0,
                                          samples.length + cur_sam.length - MAX_SAMPLES_TO_STORE_S);
 	          samples = samples.slice(discard);
@@ -1289,6 +1296,7 @@ function retrieveAndPlot(){
                 // This would be more efficient if done after sorting..
                 var n = samples.length;
 
+                // I think this is de-dupeing code...
                 samples = samples.filter((s, index, self) =>
                                          self.findIndex(t => t.ms === s.ms
                                                         && t.type === s.type
@@ -1297,26 +1305,20 @@ function retrieveAndPlot(){
                                                         && t.event === s.event
                                                         && t.val === s.val) === index);
               }
-              samples = samples.filter((s, index, self) =>
-                                       self.findIndex(t => t.ms === s.ms
-                                                      && t.type === s.type
-                                                      && t.loc === s.loc
-                                                      && t.num === s.num
-                                                      && t.event === s.event
-                                                      && t.val === s.val) === index);
+
               if (n != samples.length) {
-                console.log("deduped:",n-samples.length);
+//                console.log("deduped:",n-samples.length);
               }
 
-	      samples = samples.sort((a,b) => a.ms - b.ms);
               // Now we will trim off samples if we are live...
               if (intervalID) {
                 var last_ms = samples[samples.length-1].ms
                 samples = samples.filter((s, index, self) =>
                                          s.ms >= (last_ms - DESIRED_DURATION_S*1000));
               }
+//              console.log(samples);
               process(samples);
-              console.log("END",LAST_SAMPLE_DATE);
+//              console.log("END",LAST_SAMPLE_DATE);
             }
           },
           error: function(xhr, ajaxOptions, thrownError) {
