@@ -1,3 +1,6 @@
+
+[![DOI](https://zenodo.org/badge/273199904.svg)](https://zenodo.org/badge/latestdoi/273199904)
+
 # Vent Display
 A Ventilator Display that consumes PIRDS data and performs most clinical respiration calculations
 
