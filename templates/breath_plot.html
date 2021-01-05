@@ -28,7 +28,7 @@ Breath Plot: COVID-19 Respiration Analysis Software
 	<!-- Load plotly.js into the DOM -->
   <script src='https://cdn.plot.ly/plotly-latest.min.js'></script>
 
-  <script src='./js/respiration_math.js'></script>
+  <script src='./static/js/respiration_math.js'></script>
 
     <title>Public Invention Respiration Analysis</title>
 
@@ -1470,10 +1470,12 @@ $( document ).ready(function() {
   // CONTROL PANEL INIT START
   
   $("#control_area_button").click(function(event) {
-    alert('Starting ventilator (not really)');
+    //alert('Starting ventilator (not really)');
 
     // Send a command to a connected device via serial port
 
+    var rr = $("#control-rr").val();
+    console.log("rr: " + rr);
     /*var lh = "http://localhost:8080";
     alert('making ajax call');
     $.ajax({url: lh+"/README.md",
