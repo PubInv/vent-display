@@ -77,6 +77,13 @@ justify-content: space-between;
     background: red;
   }
 
+  #control_area {
+    background:aliceblue;
+    padding:3em;
+    margin-bottom: 1em;
+  }
+
+
 </style>
 
 <!-- Style for toggle switch -->
@@ -180,9 +187,56 @@ an interactive or static analysis of a respiration. It&#39;s primary purpose is 
         <input type="text" class="form-control" id="samples_to_plot" aria-describedby="samples_to_plot">
       </div>
 
-      <div id="control_area">
-  <button id="control_area_button" type="button" class="btn btn-primary">START</button>
+      <!-- CONTROL PANEL START -->
+      <div class="container-fluid" id="control_area">
+        <div class="row">
+        <div class="col-6">
+          <div class="control-wrapper row">
+            <label class="col-2" for="control-mode">Mode:</label>
+            <input class="col-9" type="range" id="control-mode" name="control-mode" min="0" max="2" value="0"/> 
+            <label class="col-1" id="control-mode-val">PCV</label>
+          </div>
+          <div class="control-wrapper row">
+            <label class="col-2" for="control-rr">RR:</label>
+            <input class="col-9" type="range" id="control-rr" name="control-rr" min="1" max="10" value="8"/> 
+            <label class="col-1" id="control-rr-val">8</label>
+          </div>
+          <div class="control-wrapper row">
+            <label class="col-2" for="control-ie">EI:</label>
+            <input class="col-9" type="range" id="control-ie" name="control-ie" min="1" max="4" step="0.1" value="3"/> 
+            <label class="col-1" id="control-ie-val">3</label>
+          </div>
+          <div class="control-wrapper row">
+            <label class="col-2" for="control-pinsp">Pinsp:</label>
+            <input class="col-9" type="range" id="control-pinsp" name="control-pinsp" min="10" max="50" value="35"/> 
+            <label class="col-1" id="control-pinsp-val">35</label>
+          </div>
+          <div class="control-wrapper row">
+            <label class="col-2" for="control-vinsp">Vinsp:</label>
+            <input class="col-9" type="range" id="control-vinsp" name="control-vinsp" min="200" max="800" step="50" value="500"/> 
+            <label class="col-1" id="control-vinsp-val">500</label>
+          </div>
+          <div class="control-wrapper row">
+            <label class="col-2" for="control-peep">PEEP:</label>
+            <input class="col-9" type="range" id="control-peep" name="control-peep" min="0" max="15" value="5"/> 
+            <label class="col-1" id="control-peep-val">5</label>
+          </div>
+            
+         
+          <button id="control_area_button" type="button" class="btn btn-primary">START</button>
         </div>
+
+        <div class="col-6">
+          <div>
+            <b>Status:</b> no device connected
+          </div>
+          <div>
+            <b>Log:</b> some log info
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- CONTROL PANEL END -->
 <div>
   <label for="livetoggle">Plot Live:</label>
 <label class="switch">
@@ -523,6 +577,12 @@ var RESPIRATION_RATE_WINDOW_SECONDS = 60;
 
 var intervalID = null;
 
+// CONTROL PANEL VARIABLES START
+
+
+
+
+// CONTROL PANEL VARIABLES END
 
 // This sould be better as time, but is easier
 // to do as number of samples.
@@ -1385,6 +1445,12 @@ function setLimit(ed) {
   }
 }
 
+// CONTROL PANEL FUNCTIONS START
+
+
+
+// CONTROL PANEL FUNCTIONS END
+
 $(".fence").keypress(setLimit);
 
 $("#livetoggle").change(toggle_interval_timer);
@@ -1400,21 +1466,55 @@ $( document ).ready(function() {
   else
     DSERVER_URL = "http://localhost";
 
+  
+  // CONTROL PANEL INIT START
+  
   $("#control_area_button").click(function(event) {
-    var lh = "http://localhost:8080";
-        alert('making ajax call');
+    alert('Starting ventilator (not really)');
+
+    // Send a command to a connected device via serial port
+
+    /*var lh = "http://localhost:8080";
+    alert('making ajax call');
     $.ajax({url: lh+"/README.md",
-           success: function(verification) {
-             alert("verifcation"+verification);
-           },
-           error: function(xhr, ajaxOptions, thrownError) {
-	    console.log("Error!" + xhr.status);
-	    console.log(thrownError);
-          }
-           });
+      success: function(verification) {
+        alert("verifcation"+verification);
+      },
+      error: function(xhr, ajaxOptions, thrownError) {
+        console.log("Error!" + xhr.status);
+        console.log(thrownError);
+      }
+    });*/
 
   });
 
+  $("#control-mode").on("input", () => {
+    var m = $("#control-mode").val();
+    if (m === "0"){
+      $("#control-mode-val").html("PCV");
+    } else if (m === "1"){
+      $("#control-mode-val").html("VCV");
+    } else {
+      $("#control-mode-val").html("PSV");
+    }
+  });
+  $("#control-rr").on("input", () => {
+    $("#control-rr-val").html($("#control-rr").val());
+  });
+  $("#control-ie").on("input", () => {
+    $("#control-ie-val").html($("#control-ie").val());
+  });
+  $("#control-pinsp").on("input", () => {
+    $("#control-pinsp-val").html($("#control-pinsp").val());
+  });
+  $("#control-vinsp").on("input", () => {
+    $("#control-vinsp-val").html($("#control-vinsp").val());
+  });
+  $("#control-peep").on("input", () => {
+    $("#control-peep-val").html($("#control-peep").val());
+  });
+
+  // CONTROL PANEL INIT END
 
 
   $("button").click(function(event)
