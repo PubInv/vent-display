@@ -28,7 +28,7 @@ Breath Plot: COVID-19 Respiration Analysis Software
 	<!-- Load plotly.js into the DOM -->
   <script src='https://cdn.plot.ly/plotly-latest.min.js'></script>
 
-  <script src='./static/js/respiration_math.js'></script>
+  <script src='./js/respiration_math.js'></script>
 
     <title>Public Invention Respiration Analysis</title>
 
@@ -189,7 +189,10 @@ an interactive or static analysis of a respiration. It&#39;s primary purpose is 
 
       <!-- CONTROL PANEL START -->
       <div class="container-fluid" id="control_area">
-        <div class="row">
+        <div class="row" id="control-panel-hidden">
+          <button type="button" class="btn btn-primary">SHOW CONTROLS</button>
+        </div>
+        <div class="row" id="control-panel-expanded">
         <div class="col-6">
           <div class="control-wrapper row">
             <label class="col-2" for="control-mode">Mode:</label>
@@ -579,7 +582,7 @@ var intervalID = null;
 
 // CONTROL PANEL VARIABLES START
 
-
+var controlsVisible = false;
 
 
 // CONTROL PANEL VARIABLES END
@@ -1489,6 +1492,19 @@ $( document ).ready(function() {
     });*/
 
   });
+
+  $("#control-panel-hidden button").click(()=> {
+    console.log("show panel");
+    if (controlsVisible){
+      $("#control-panel-expanded").hide();
+      controlsVisible = false;
+    } else {
+      $("#control-panel-expanded").show();
+      controlsVisible = true;
+    }
+  });
+
+  $("#control-panel-expanded").hide();
 
   $("#control-mode").on("input", () => {
     var m = $("#control-mode").val();
