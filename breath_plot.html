@@ -180,6 +180,9 @@ an interactive or static analysis of a respiration. It&#39;s primary purpose is 
         <input type="text" class="form-control" id="samples_to_plot" aria-describedby="samples_to_plot">
       </div>
 
+      <div id="control_area">
+  <button id="control_area_button" type="button" class="btn btn-primary">START</button>
+        </div>
 <div>
   <label for="livetoggle">Plot Live:</label>
 <label class="switch">
@@ -1396,6 +1399,22 @@ $( document ).ready(function() {
     DSERVER_URL = window.location.protocol + "//" + window.location.host;
   else
     DSERVER_URL = "http://localhost";
+
+  $("#control_area_button").click(function(event) {
+    var lh = "http://localhost:8080";
+        alert('making ajax call');
+    $.ajax({url: lh+"/README.md",
+           success: function(verification) {
+             alert("verifcation"+verification);
+           },
+           error: function(xhr, ajaxOptions, thrownError) {
+	    console.log("Error!" + xhr.status);
+	    console.log(thrownError);
+          }
+           });
+
+  });
+
 
 
   $("button").click(function(event)
