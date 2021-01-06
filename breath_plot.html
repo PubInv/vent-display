@@ -30,7 +30,7 @@ Breath Plot: COVID-19 Respiration Analysis Software
 
   <script src='./js/respiration_math.js'></script>
 
-    <title>Public Invention Respiration Analysis</title>
+  <title>Public Invention Respiration Analysis</title>
 
 </head>
   <style>
@@ -77,9 +77,9 @@ justify-content: space-between;
     background: red;
   }
 
-  #control_area {
+  #control-area {
     background:aliceblue;
-    padding:3em;
+    padding:1em;
     margin-bottom: 1em;
   }
 
@@ -182,64 +182,16 @@ an interactive or static analysis of a respiration. It&#39;s primary purpose is 
 
       <div class="input-group mb-3">
         <div class="input-group-prepend">
-  <span class="input-group-text" for="samples_to_plot">Number of Samples (~10s per 15000 samples):</span>
+          <span class="input-group-text" for="samples_to_plot">Number of Samples (~10s per 15000 samples):</span>
         </div>
         <input type="text" class="form-control" id="samples_to_plot" aria-describedby="samples_to_plot">
       </div>
 
       <!-- CONTROL PANEL START -->
-      <div class="container-fluid" id="control_area">
-        <div class="row" id="control-panel-hidden">
-          <button type="button" class="btn btn-primary">SHOW CONTROLS</button>
-        </div>
-        <div class="row" id="control-panel-expanded">
-        <div class="col-6">
-          <div class="control-wrapper row">
-            <label class="col-2" for="control-mode">Mode:</label>
-            <input class="col-9" type="range" id="control-mode" name="control-mode" min="0" max="2" value="0"/> 
-            <label class="col-1" id="control-mode-val">PCV</label>
-          </div>
-          <div class="control-wrapper row">
-            <label class="col-2" for="control-rr">RR:</label>
-            <input class="col-9" type="range" id="control-rr" name="control-rr" min="1" max="10" value="8"/> 
-            <label class="col-1" id="control-rr-val">8</label>
-          </div>
-          <div class="control-wrapper row">
-            <label class="col-2" for="control-ie">EI:</label>
-            <input class="col-9" type="range" id="control-ie" name="control-ie" min="1" max="4" step="0.1" value="3"/> 
-            <label class="col-1" id="control-ie-val">3</label>
-          </div>
-          <div class="control-wrapper row">
-            <label class="col-2" for="control-pinsp">Pinsp:</label>
-            <input class="col-9" type="range" id="control-pinsp" name="control-pinsp" min="10" max="50" value="35"/> 
-            <label class="col-1" id="control-pinsp-val">35</label>
-          </div>
-          <div class="control-wrapper row">
-            <label class="col-2" for="control-vinsp">Vinsp:</label>
-            <input class="col-9" type="range" id="control-vinsp" name="control-vinsp" min="200" max="800" step="50" value="500"/> 
-            <label class="col-1" id="control-vinsp-val">500</label>
-          </div>
-          <div class="control-wrapper row">
-            <label class="col-2" for="control-peep">PEEP:</label>
-            <input class="col-9" type="range" id="control-peep" name="control-peep" min="0" max="15" value="5"/> 
-            <label class="col-1" id="control-peep-val">5</label>
-          </div>
-            
-         
-          <button id="control_area_button" type="button" class="btn btn-primary">START</button>
-        </div>
-
-        <div class="col-6">
-          <div>
-            <b>Status:</b> no device connected
-          </div>
-          <div>
-            <b>Log:</b> some log info
-          </div>
-        </div>
+      <div class="container-fluid" id="control-area">
+        <div id="control-slot"><button type="button" class="btn btn-primary">SHOW CONTROLS</button></div>
       </div>
-    </div>
-    <!-- CONTROL PANEL END -->
+      <!-- CONTROL PANEL END -->
 <div>
   <label for="livetoggle">Plot Live:</label>
 <label class="switch">
@@ -579,13 +531,6 @@ var DATA_RETRIEVAL_PERIOD = 500;
 var RESPIRATION_RATE_WINDOW_SECONDS = 60;
 
 var intervalID = null;
-
-// CONTROL PANEL VARIABLES START
-
-var controlsVisible = false;
-
-
-// CONTROL PANEL VARIABLES END
 
 // This sould be better as time, but is easier
 // to do as number of samples.
@@ -1472,66 +1417,66 @@ $( document ).ready(function() {
   
   // CONTROL PANEL INIT START
   
-  $("#control_area_button").click(function(event) {
-    //alert('Starting ventilator (not really)');
+  $("#control-slot button").click(function() {
+    var lh = $("#dserverurl").val();
+    $.ajax({url: lh+"/vent.html",
+      success: function(result) {
+        //console.log("result "+ result);
+        $("#control-slot").html(result);
 
-    // Send a command to a connected device via serial port
+        $("#control-start").click(function(event) {
 
-    var rr = $("#control-rr").val();
-    console.log("rr: " + rr);
-    /*var lh = "http://localhost:8080";
-    alert('making ajax call');
-    $.ajax({url: lh+"/README.md",
-      success: function(verification) {
-        alert("verifcation"+verification);
+          // Send a command to a connected device via serial port
+
+          var rr = $("#control-rr").val();
+          console.log("rr: " + rr);
+          var lh = "http://localhost:5000";
+          $.ajax({url: lh+"?rr="+rr,
+            success: function(result) {
+              console.log("result: " + JSON.stringify(result));
+            },
+            error: function(xhr, ajaxOptions, thrownError) {
+              console.log("Error! " + xhr.status);
+              console.log(thrownError);
+            }
+          });
+
+        });
+
+        $("#control-mode").on("input", () => {
+          var m = $("#control-mode").val();
+          if (m === "0"){
+            $("#control-mode-val").html("PCV");
+          } else if (m === "1"){
+            $("#control-mode-val").html("VCV");
+          } else {
+            $("#control-mode-val").html("PSV");
+          }
+        });
+        $("#control-rr").on("input", () => {
+          $("#control-rr-val").html($("#control-rr").val());
+        });
+        $("#control-ie").on("input", () => {
+          $("#control-ie-val").html($("#control-ie").val());
+        });
+        $("#control-pinsp").on("input", () => {
+          $("#control-pinsp-val").html($("#control-pinsp").val());
+        });
+        $("#control-vinsp").on("input", () => {
+          $("#control-vinsp-val").html($("#control-vinsp").val());
+        });
+        $("#control-peep").on("input", () => {
+          $("#control-peep-val").html($("#control-peep").val());
+        });
+
       },
       error: function(xhr, ajaxOptions, thrownError) {
-        console.log("Error!" + xhr.status);
+        console.log("Error! " + xhr.status);
         console.log(thrownError);
       }
-    });*/
-
+    });
   });
-
-  $("#control-panel-hidden button").click(()=> {
-    console.log("show panel");
-    if (controlsVisible){
-      $("#control-panel-expanded").hide();
-      controlsVisible = false;
-    } else {
-      $("#control-panel-expanded").show();
-      controlsVisible = true;
-    }
-  });
-
-  $("#control-panel-expanded").hide();
-
-  $("#control-mode").on("input", () => {
-    var m = $("#control-mode").val();
-    if (m === "0"){
-      $("#control-mode-val").html("PCV");
-    } else if (m === "1"){
-      $("#control-mode-val").html("VCV");
-    } else {
-      $("#control-mode-val").html("PSV");
-    }
-  });
-  $("#control-rr").on("input", () => {
-    $("#control-rr-val").html($("#control-rr").val());
-  });
-  $("#control-ie").on("input", () => {
-    $("#control-ie-val").html($("#control-ie").val());
-  });
-  $("#control-pinsp").on("input", () => {
-    $("#control-pinsp-val").html($("#control-pinsp").val());
-  });
-  $("#control-vinsp").on("input", () => {
-    $("#control-vinsp-val").html($("#control-vinsp").val());
-  });
-  $("#control-peep").on("input", () => {
-    $("#control-peep-val").html($("#control-peep").val());
-  });
-
+ 
   // CONTROL PANEL INIT END
 
 
