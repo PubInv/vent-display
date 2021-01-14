@@ -1,4 +1,3 @@
-//var http = require('http'); // Import Node.js core module
 var express = require('express');
 var app = express();
 const SerialPort = require('serialport'); //https://serialport.io/docs/guide-usage
@@ -20,14 +19,38 @@ parser.on('data', data =>{
   console.log(data);
 });
 
-app.get('/', function (req, res) {
+app.get('/', function(req, res) {
 	res.send('Hello world');
-	port.write('testing testing hello ben\n', (err) => {
-			if (err) {
-			  return console.log('Error on write: ', err.message);
-			}
-		});
+	port.write('hello world\n', (err) => {
+		if (err) {
+		  return console.log('Error on write: ', err.message);
+		}
+	});
 })
+
+app.get('/api/set', function(req, res) {
+    var x = '';
+	if (req.query.rr){
+		x += '{"rr":"' + req.query.rr + '"}\n';
+	}
+	res.send(x);
+	
+	port.write(x, (err) => {
+		//console.log('wrote to port ' + x);
+		if (err) {
+		  return console.log('Error on write: ', err.message);
+		}
+	});
+});
+
+/*app.get('/rr/:rr', function(req,res) {
+	res.send(req.params);
+	port.write(JSON.stringify(req.params)+'\n', (err) => {
+		if (err) {
+		  return console.log('Error on write: ', err.message);
+		}
+	});
+})*/
 
 var server = app.listen(5000, function () {
 	var host = server.address().address;

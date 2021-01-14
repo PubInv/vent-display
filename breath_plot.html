@@ -1431,7 +1431,7 @@ $( document ).ready(function() {
           var rr = $("#control-rr").val();
           console.log("rr: " + rr);
           var lh = "http://localhost:5000";
-          $.ajax({url: lh+"?rr="+rr,
+          $.ajax({url: lh+"/api/set?rr="+rr,
             success: function(result) {
               console.log("result: " + JSON.stringify(result));
             },
