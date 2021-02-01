@@ -1416,33 +1416,43 @@ $( document ).ready(function() {
 
   
   // CONTROL PANEL INIT START
-  
   $("#control-slot button").click(function() {
     var lh = $("#dserverurl").val();
-    $.ajax({url: lh+"/vent.html",
-      success: function(result) {
-        //console.log("result "+ result);
+    $.ajax({url: lh+"/vent.html"})
+      .done(function(result) {
+        // Show the control panel
         $("#control-slot").html(result);
 
+        // Send PIRCS commands when START button is pressed
         $("#control-start").click(function(event) {
-
           // Send a command to a connected device via serial port
+          console.log("Sending PIRCS...");
+          var dict = {
+            M: $("#control-mode").val(),
+            B: $("#control-rr").val(),
+            I: $("#control-ie").val(),
+            P: $("#control-pinsp").val(),
+            E: $("#control-peep").val()
+          }
 
-          var rr = $("#control-rr").val();
-          console.log("rr: " + rr);
-          var lh = "http://localhost:5000";
-          $.ajax({url: lh+"/api/set?rr="+rr,
-            success: function(result) {
+          for (var k in dict){
+            $.ajax({
+              //url: lh+"/api/pircs?com=C&par="+parName+"&int="+interp+"&mod="+modifier+"&val="+val,
+              type: 'GET',
+              url: 'http://localhost:5000/api/pircs/',
+              dataType: 'json',
+              data: { com: "C", par: k, int: "T", mod: 0, val: dict[k] }
+            }).done(function(result) {
               console.log("result: " + JSON.stringify(result));
-            },
-            error: function(xhr, ajaxOptions, thrownError) {
+            }).fail(function(xhr, ajaxOptions, thrownError) {
               console.log("Error! " + xhr.status);
               console.log(thrownError);
-            }
-          });
-
+            })
+            
+          }
         });
 
+        // Update values on slider change
         $("#control-mode").on("input", () => {
           var m = $("#control-mode").val();
           if (m === "0"){
@@ -1468,15 +1478,14 @@ $( document ).ready(function() {
         $("#control-peep").on("input", () => {
           $("#control-peep-val").html($("#control-peep").val());
         });
-
-      },
-      error: function(xhr, ajaxOptions, thrownError) {
-        console.log("Error! " + xhr.status);
-        console.log(thrownError);
-      }
-    });
+      })
+      .fail(function(){
+        console.log("Couldn't open control panel!");
+      });
   });
  
+
+  
   // CONTROL PANEL INIT END
 
 
