@@ -185,7 +185,7 @@ an interactive or static analysis of a respiration. It&#39;s primary purpose is 
           <span class="input-group-text" for="samples_to_plot">Number of Samples (~10s per 15000 samples):</span>
         </div>
         <input type="text" class="form-control" id="samples_to_plot" aria-describedby="samples_to_plot">
-      </div>      
+      </div>
 <div>
   <label for="livetoggle">Plot Live:</label>
 <label class="switch">
@@ -1414,7 +1414,7 @@ $( document ).ready(function() {
   else
     DSERVER_URL = "http://localhost";
 
-  
+
   // CONTROL PANEL INIT START
   $("#control-slot button").click(function() {
     var lh = $("#dserverurl").val();
@@ -1427,12 +1427,19 @@ $( document ).ready(function() {
         $("#control-start").click(function(event) {
           // Send a command to a connected device via serial port
           console.log("Sending PIRCS...");
+          //Note: PIRCS uses specific units,
+          // which are designed to provide the right
+          // amount of precision without using
+          // floating point numbers.
+          // Often this means multiplying the
+          // common medical units by 10 to be the
+          // PIRCS units.
           var dict = {
             M: $("#control-mode").val(),
-            B: $("#control-rr").val(),
+            B: $("#control-rr").val()*10,
             I: $("#control-ie").val(),
-            P: $("#control-pinsp").val(),
-            E: $("#control-peep").val()
+            P: $("#control-pinsp").val()*10,
+            E: $("#control-peep").val()*10,
           }
 
           for (var k in dict){
@@ -1441,14 +1448,14 @@ $( document ).ready(function() {
               type: 'GET',
               url: 'http://localhost:5000/api/pircs/',
               dataType: 'json',
-              data: { com: "C", par: k, int: "T", mod: 0, val: dict[k] }
+              data: { com: "C", par: k, int: "T", mod: "A", val: dict[k] }
             }).done(function(result) {
               console.log("result: " + JSON.stringify(result));
             }).fail(function(xhr, ajaxOptions, thrownError) {
               console.log("Error! " + xhr.status);
               console.log(thrownError);
             })
-            
+
           }
         });
 
@@ -1483,9 +1490,9 @@ $( document ).ready(function() {
         console.log("Couldn't open control panel!");
       });
   });
- 
 
-  
+
+
   // CONTROL PANEL INIT END
 
 

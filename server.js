@@ -5,9 +5,13 @@ app.use(cors());
 const SerialPort = require('serialport'); //https://serialport.io/docs/guide-usage
 const Readline = require('@serialport/parser-readline');
 
-const port = new SerialPort('COM4', { baudRate: 9600 });
+// const port = new SerialPort('/dev/cu.usbmodem142401', { baudRate: 19200 });
+const port = new SerialPort('/dev/cu.usbserial-01D9677E', { baudRate: 19200 });
+// const port = new SerialPort('COM4', { baudRate: 9600 });
 const parser = port.pipe(new Readline());// Read the port data
-	
+
+
+
 port.on("open", () => {
   console.log('serial port open');
 });
@@ -20,6 +24,9 @@ port.on('error', function(err) {
 parser.on('data', data =>{
   console.log(data);
 });
+
+
+// parser.on('data', console.log)
 
 app.get('/', function(req, res) {
 	res.send('Hello world');
@@ -36,7 +43,7 @@ app.get('/api/set', function(req, res) {
 		x += '{"rr":"' + req.query.rr + '"}\n';
 	}
 	res.send(x);
-	
+
 	port.write(x, (err) => {
 		//console.log('wrote to port ' + x);
 		if (err) {
@@ -82,11 +89,13 @@ app.get('/api/pircs', function(req, res) {
 		res.setHeader('Access-Control-Allow-Origin', '*');
 		res.status(400).send(err);
 	} else {
-	
+
 		res.setHeader("Content-Type", "application/json");
 		res.setHeader('Access-Control-Allow-Origin', '*');
 		res.status(200).send(x);
-			
+          console.log("About to write:");
+          console.log(x);
+          console.log("done");
 		port.write(x, (err) => {
 			if (err) {
 			return console.log('Error on write: ', err.message);
