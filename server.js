@@ -1,3 +1,11 @@
+#!/usr/bin/env node
+var argv = require('yargs/yargs')(process.argv.slice(2))
+    .usage('Usage: $0 -sport [string, seraiport name] -uport [num,reporting port] -uaddress [string, like "127.0.0.1" or "ventmon.coslabs.com"]')
+    .default('sport', "COM4")
+    .default('uport', 6111)
+    .default('uaddress', "127.0.0.1")
+    .demandOption(['sport','uport','uaddress'])
+    .argv;
 var express = require('express');
 const cors = require('cors');
 var app = express();
@@ -5,23 +13,49 @@ app.use(cors());
 const SerialPort = require('serialport'); //https://serialport.io/docs/guide-usage
 const Readline = require('@serialport/parser-readline');
 
-// const port = new SerialPort('/dev/cu.usbmodem142401', { baudRate: 19200 });
-const port = new SerialPort('/dev/cu.usbserial-01D9677E', { baudRate: 19200 });
-// const port = new SerialPort('COM4', { baudRate: 9600 });
-const parser = port.pipe(new Readline());// Read the port data
+const sport_name = argv.sport;
+const uport = argv.uport;
+const uaddress = argv.uaddress;
+
+console.log("Parameters:");
+console.log("argv.sport",argv.sport);
+console.log("sport_name (Serial Port name)",sport_name);
+console.log("uport (UDP port)",uport);
+console.log("uaddress (UDP address)",uaddress);
 
 
+const sport = new SerialPort(sport_name, { baudRate: 19200 });
 
-port.on("open", () => {
+const parser = sport.pipe(new Readline());// Read the port data
+
+// Rob is adding the ability to send UDP datagrams to make this work with our datalake!
+// Okay, this code basically works---but I might have to fill a byte buffer.
+const dgram = require('dgram');
+
+sport.on("open", () => {
   console.log('serial port open');
 });
 
 // Open errors will be emitted as an error event
-port.on('error', function(err) {
+sport.on('error', function(err) {
   console.log('Error: ', err.message)
 })
 
+
 parser.on('data', data =>{
+  // Let's see if the data is a PIRDS event...
+  // Note: The PIRDSlogger accepts JSON, but I'm not sure we ever implemented that
+  // being interpreted as a message. That possibly should be fixed, but I'm going to just
+  // construct a buffer here.
+    const message = new Buffer(data);
+    const client = dgram.createSocket('udp4');
+    //    client.send(message, 0, message.length, 6111,"ventmon.coslabs.com", (err) => {
+  client.send(message, 0, message.length, uport, uaddress, (err) => {
+    if (err) {
+      console.log(err);
+    }
+      client.close();
+    });
   console.log(data);
 });
 
@@ -30,7 +64,7 @@ parser.on('data', data =>{
 
 app.get('/', function(req, res) {
 	res.send('Hello world');
-	port.write('hello world\n', (err) => {
+	sport.write('hello world\n', (err) => {
 		if (err) {
 		  return console.log('Error on write: ', err.message);
 		}
@@ -44,7 +78,7 @@ app.get('/api/set', function(req, res) {
 	}
 	res.send(x);
 
-	port.write(x, (err) => {
+	sport.write(x, (err) => {
 		//console.log('wrote to port ' + x);
 		if (err) {
 		  return console.log('Error on write: ', err.message);
@@ -96,7 +130,7 @@ app.get('/api/pircs', function(req, res) {
           console.log("About to write:");
           console.log(x);
           console.log("done");
-		port.write(x, (err) => {
+		sport.write(x, (err) => {
 			if (err) {
 			return console.log('Error on write: ', err.message);
 			}
@@ -109,7 +143,7 @@ app.get('/api/pircs', function(req, res) {
 // /api/pircs2/C/P/T/0/400
 app.get('/api/pircs2/:com/:par/:int/:mod/:val', function(req,res) {
 	res.send(req.params);
-	port.write(JSON.stringify(req.params)+'\n', (err) => {
+	sport.write(JSON.stringify(req.params)+'\n', (err) => {
 		if (err) {
 		  return console.log('Error on write: ', err.message);
 		}
