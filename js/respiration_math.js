@@ -631,6 +631,10 @@ function testWorkSynthetic(){ // breaths give us inspiration transition points
 function computeMovingWindowTrace(samples,t,v) {
 
   var flows = samples.filter(s => s.event == 'M' && s.type == 'F');
+
+  if (flows.length == 0) {
+    return [[],[]];
+  }
   var first_time = flows[0].ms;
   var last_time = flows[flows.length - 1].ms;
   var duration = last_time - first_time;

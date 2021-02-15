@@ -430,7 +430,56 @@ an interactive or static analysis of a respiration. It&#39;s primary purpose is 
 
   <!-- CONTROL PANEL START -->
   <div class="container-fluid" id="control-area">
-    <div id="control-slot"><button type="button" class="btn btn-primary">SHOW CONTROLS</button></div>
+    <button id="show_controls" type="button" class="btn btn-primary">EPAND/COLLAPSE CONTROLS</button>
+<div id="control-slot">
+  <div class="row">
+    <div class="col-6">
+    <div class="control-wrapper row">
+      <label class="col-2" for="control-mode">Mode:</label>
+      <input class="col-9" type="range" id="control-mode" name="control-mode" min="0" max="2" value="0"/>
+      <label class="col-1" id="control-mode-val">PCV</label>
+    </div>
+    <div class="control-wrapper row">
+      <label class="col-2" for="control-rr">RR:</label>
+      <input class="col-9" type="range" id="control-rr" name="control-rr" min="1" max="30" value="12"/>
+      <label class="col-1" id="control-rr-val">12</label>
+    </div>
+    <div class="control-wrapper row">
+      <label class="col-2" for="control-ie">EI (x10) :</label>
+      <input class="col-9" type="range" id="control-ie" name="control-ie" min="5" max="50" step="1" value="30"/>
+      <label class="col-1" id="control-ie-val">30</label>
+    </div>
+    <div class="control-wrapper row">
+      <label class="col-2" for="control-pinsp">Pinsp (cmH20):</label>
+      <input class="col-9" type="range" id="control-pinsp" name="control-pinsp" min="10" max="50" value="35"/>
+      <label class="col-1" id="control-pinsp-val">35</label>
+    </div>
+    <div class="control-wrapper row">
+      <label class="col-2" for="control-vinsp">Vinsp:</label>
+      <input class="col-9" type="range" id="control-vinsp" name="control-vinsp" min="200" max="800" step="20" value="500"/>
+      <label class="col-1" id="control-vinsp-val">500</label>
+    </div>
+    <div class="control-wrapper row">
+      <label class="col-2" for="control-peep">PEEP (cmH20):</label>
+      <input class="col-9" type="range" id="control-peep" name="control-peep" min="0" max="15" value="5"/>
+      <label class="col-1" id="control-peep-val">5</label>
+    </div>
+
+
+    <button id="control-start" type="button" class="btn btn-primary">START</button>
+  </div>
+  </div>
+
+  <div class="col-6">
+    <div>
+      <b>Status:</b> no device connected
+    </div>
+    <div>
+      <b>Log:</b> some log info
+    </div>
+  </div>
+</div>
+
   </div>
   <!-- CONTROL PANEL END -->
 
@@ -522,7 +571,9 @@ const VENTMON_DATA_LAKE = "http://ventmon.coslabs.com";
 const queryString = window.location.search;
 const urlParams = new URLSearchParams(queryString);
 var TRACE_ID = urlParams.get('i')
-var DSERVER_URL = window.location.protocol + "//" + window.location.host;
+// This was problematic when the data server was in a different place...
+// var DSERVER_URL = window.location.protocol + "//" + window.location.host;
+var DSERVER_URL = "";
 var NUM_TO_READ = 500;
 var DESIRED_DURATION_S = 30;
 
@@ -1228,37 +1279,37 @@ function retrieveAndPlot(){
   var trace_piece = (TRACE_ID) ? "/" + TRACE_ID : "";
   DSERVER_URL = $("#dserverurl").val();
   var url;
-  if ((MAX_REFRESH || samples.length == 0) || !LAST_SAMPLE_DATE) {
+
+  var TREAT_LIVE_AND_OVERRIDE_TIME = true;
+  if (TREAT_LIVE_AND_OVERRIDE_TIME || (MAX_REFRESH || samples.length == 0) || !LAST_SAMPLE_DATE) {
     url =  DSERVER_URL + trace_piece + "/json?n="+ MAX_SAMPLES_TO_STORE_S;
   } else {
     url = DSERVER_URL + trace_piece + "/json?n="+  NUM_TO_READ +
       "&t=" + encodeURIComponent(LAST_SAMPLE_DATE.toUTCString());
   }
 
-  // I am here attempting to change the behavior based on whether
-  // we are "live" or not. If we are live, we take the duration
-  // backwards from the current moment in time.
-  // If we are not live, we take the duration forward from the start
-  // sample field. We will use "a" for the start time, "z" for the
-  // finish time, n for the maximum number to read, and "d" for
-  // the duration in ms.
-  var REQUEST_FINAL_SAMPLE;
-  if (intervalID  && LAST_SAMPLE_DATE) {
-//    console.log("BEGIN",LAST_SAMPLE_DATE);
-    var currentDate = new Date();
-    var t = currentDate.getTime();
-    var tm = t - DESIRED_DURATION_S*1000;
-    var t_max = Math.max(tm,LAST_SAMPLE_DATE.getTime());
-    var date_minus_duration = new Date(t_max);
-    url = DSERVER_URL + trace_piece + "/json?n="+  NUM_TO_READ +
-      "&a=" + encodeURIComponent(date_minus_duration.toUTCString()) +
-      "&z=" + encodeURIComponent(currentDate.toUTCString());
-    REQUEST_FINAL_SAMPLE = currentDate;
-//    console.log("A",date_minus_duration);
-//    console.log("Z",currentDate);
-  } else {
+  //
+  // Our basic rule is:
+  // if we are live and we have samples,
+  // we always set z= to the last sample.
+  if (!TREAT_LIVE_AND_OVERRIDE_TIME) {
+    var REQUEST_FINAL_SAMPLE;
+    if (intervalID  && LAST_SAMPLE_DATE) {
+      var currentDate = new Date();
+      var t = currentDate.getTime();
+      var tm = t - DESIRED_DURATION_S*1000;
+      var t_max = Math.max(tm,LAST_SAMPLE_DATE.getTime());
+      var date_minus_duration = new Date(t_max);
+      url = DSERVER_URL + trace_piece + "/json?n="+  NUM_TO_READ +
+        "&a=" + encodeURIComponent(date_minus_duration.toUTCString()) +
+        "&z=" + encodeURIComponent(currentDate.toUTCString());
+      REQUEST_FINAL_SAMPLE = currentDate;
+      //    console.log("A",date_minus_duration);
+      //    console.log("Z",currentDate);
+    } else {
+    }
   }
-//  console.log("url =",decodeURI(url));
+  console.log("url =",decodeURI(url));
   $.ajax({url: url,
           success: function(cur_sam){
 
@@ -1278,29 +1329,33 @@ function retrieveAndPlot(){
               LAST_SAMPLE_DATE = REQUEST_FINAL_SAMPLE;
             } else {
               if (typeof(cur_sam) == "string") {
-                console.log("Error!");
+                console.log("Error!",cur_sam);
                 stop_interval_timer();
                 $("#livetoggle").prop("checked",false);
-//                console.log(cur_sam);
+                console.log(cur_sam);
               } else {
                 cur_sam = sanitize_samples(cur_sam);
 	        if (INITS_ONLY) {
 	          samples = cur_sam;
 	          INITS_ONLY = false;
 	        } else {
+                  console.log("cursuam: a,z : ",cur_sam[0].ms,cur_sam[cur_sam.length-1].ms);
 
                   var first_new_ms = cur_sam[0].ms;
-                  var cur_first_ms = samples[0].ms;
-                  if (first_new_ms < cur_first_ms) { // This means a reset of the Arduino, we will dump samples..
-                    samples = [];
-                    console.log("DETECTED ARDUINO RESET, DUMPING CURRENT SAMPLES");
-                  }
+//                  var cur_first_ms = samples[0].ms;
+                  // THIS IS WRONG
+                  // if (first_new_ms < cur_first_ms) { // This means a reset of the Arduino, we will dump samples..
+                  //   samples = [];
+                  //   console.log("DETECTED ARDUINO RESET, DUMPING CURRENT SAMPLES");
+                  // }
                   var discard = Math.max(0,
                                          samples.length + cur_sam.length - MAX_SAMPLES_TO_STORE_S);
 	          samples = samples.slice(discard);
 	        }
 
+                // This is leading to an inconsistency!!
 	        samples = samples.concat(cur_sam);
+                samples.sort((a,b) => a.ms < b.ms);
 	        // We are not guaranteeed to get samples in order
 	        // we sort them....
                 // We also need to de-dup them.
@@ -1318,7 +1373,7 @@ function retrieveAndPlot(){
               }
 
               if (n != samples.length) {
-//                console.log("deduped:",n-samples.length);
+                console.log("deduped:",n-samples.length);
               }
 
               // Now we will trim off samples if we are live...
@@ -1327,9 +1382,10 @@ function retrieveAndPlot(){
                 samples = samples.filter((s, index, self) =>
                                          s.ms >= (last_ms - DESIRED_DURATION_S*1000));
               }
-//              console.log(samples);
-              process(samples);
-//              console.log("END",LAST_SAMPLE_DATE);
+              console.log(samples);
+              if (samples.length > 0)
+                process(samples);
+              console.log("END",LAST_SAMPLE_DATE);
             }
           },
           error: function(xhr, ajaxOptions, thrownError) {
@@ -1407,88 +1463,75 @@ $("#startoperation").click(start_interval_timer);
 
 $("#stopoperation").click(stop_interval_timer);
 
+// Send PIRCS commands when START button is pressed
+$("#control-start").click(function(event) {
+  // Send a command to a connected device via serial port
+  console.log("Sending PIRCS...");
+  //Note: PIRCS uses specific units,
+  // which are designed to provide the right
+  // amount of precision without using
+  // floating point numbers.
+  // Often this means multiplying the
+  // common medical units by 10 to be the
+  // PIRCS units.
+  var dict = {
+    M: $("#control-mode").val(),
+    B: $("#control-rr").val()*10,
+    I: $("#control-ie").val(),
+    P: $("#control-pinsp").val()*10,
+    E: $("#control-peep").val()*10,
+  }
+
+  for (var k in dict){
+    $.ajax({
+      //url: lh+"/api/pircs?com=C&par="+parName+"&int="+interp+"&mod="+modifier+"&val="+val,
+      type: 'GET',
+      url: 'http://localhost:5000/api/pircs/',
+      dataType: 'json',
+      data: { com: "C", par: k, int: "T", mod: "A", val: dict[k] }
+    }).done(function(result) {
+      console.log("result: " + JSON.stringify(result));
+    }).fail(function(xhr, ajaxOptions, thrownError) {
+      console.log("Error! " + xhr.status);
+      console.log(thrownError);
+    })
+
+  }
+});
+
+// Update values on slider change
+$("#control-mode").on("input", () => {
+  var m = $("#control-mode").val();
+  if (m === "0"){
+    $("#control-mode-val").html("PCV");
+  } else if (m === "1"){
+    $("#control-mode-val").html("VCV");
+  } else {
+    $("#control-mode-val").html("PSV");
+  }
+});
+$("#control-rr").on("input", () => {
+  $("#control-rr-val").html($("#control-rr").val());
+});
+$("#control-ie").on("input", () => {
+  $("#control-ie-val").html($("#control-ie").val());
+});
+$("#control-pinsp").on("input", () => {
+  $("#control-pinsp-val").html($("#control-pinsp").val());
+});
+$("#control-vinsp").on("input", () => {
+  $("#control-vinsp-val").html($("#control-vinsp").val());
+});
+$("#control-peep").on("input", () => {
+  $("#control-peep-val").html($("#control-peep").val());
+});
+
+
 $( document ).ready(function() {
 
-  if (window.location.protocol == "http:")
-    DSERVER_URL = window.location.protocol + "//" + window.location.host;
-  else
-    DSERVER_URL = "http://localhost";
-
-
   // CONTROL PANEL INIT START
-  $("#control-slot button").click(function() {
-    var lh = $("#dserverurl").val();
-    $.ajax({url: lh+"/vent.html"})
-      .done(function(result) {
-        // Show the control panel
-        $("#control-slot").html(result);
-
-        // Send PIRCS commands when START button is pressed
-        $("#control-start").click(function(event) {
-          // Send a command to a connected device via serial port
-          console.log("Sending PIRCS...");
-          //Note: PIRCS uses specific units,
-          // which are designed to provide the right
-          // amount of precision without using
-          // floating point numbers.
-          // Often this means multiplying the
-          // common medical units by 10 to be the
-          // PIRCS units.
-          var dict = {
-            M: $("#control-mode").val(),
-            B: $("#control-rr").val()*10,
-            I: $("#control-ie").val(),
-            P: $("#control-pinsp").val()*10,
-            E: $("#control-peep").val()*10,
-          }
-
-          for (var k in dict){
-            $.ajax({
-              //url: lh+"/api/pircs?com=C&par="+parName+"&int="+interp+"&mod="+modifier+"&val="+val,
-              type: 'GET',
-              url: 'http://localhost:5000/api/pircs/',
-              dataType: 'json',
-              data: { com: "C", par: k, int: "T", mod: "A", val: dict[k] }
-            }).done(function(result) {
-              console.log("result: " + JSON.stringify(result));
-            }).fail(function(xhr, ajaxOptions, thrownError) {
-              console.log("Error! " + xhr.status);
-              console.log(thrownError);
-            })
-
-          }
-        });
-
-        // Update values on slider change
-        $("#control-mode").on("input", () => {
-          var m = $("#control-mode").val();
-          if (m === "0"){
-            $("#control-mode-val").html("PCV");
-          } else if (m === "1"){
-            $("#control-mode-val").html("VCV");
-          } else {
-            $("#control-mode-val").html("PSV");
-          }
-        });
-        $("#control-rr").on("input", () => {
-          $("#control-rr-val").html($("#control-rr").val());
-        });
-        $("#control-ie").on("input", () => {
-          $("#control-ie-val").html($("#control-ie").val());
-        });
-        $("#control-pinsp").on("input", () => {
-          $("#control-pinsp-val").html($("#control-pinsp").val());
-        });
-        $("#control-vinsp").on("input", () => {
-          $("#control-vinsp-val").html($("#control-vinsp").val());
-        });
-        $("#control-peep").on("input", () => {
-          $("#control-peep-val").html($("#control-peep").val());
-        });
-      })
-      .fail(function(){
-        console.log("Couldn't open control panel!");
-      });
+  $("#show_controls").click(function() {
+    $("#control-slot").toggle();
   });
 
 
@@ -1496,7 +1539,7 @@ $( document ).ready(function() {
   // CONTROL PANEL INIT END
 
 
-  $("button").click(function(event)
+  $("#leftjustify button").click(function(event)
                     {
                       var a = event.currentTarget.innerText.split("s");
                       console.log(a[0]);
@@ -1507,12 +1550,14 @@ $( document ).ready(function() {
 
   $( "#dserverurl" ).val( DSERVER_URL );
   $('#dserverurl').change(function () {
+    samples = [];
     DSERVER_URL = $("#dserverurl").val();
     start_interval_timer();
   });
 
   $( "#traceid" ).val( TRACE_ID );
   $('#traceid').change(function () {
+    samples = [];
     TRACE_ID = $("#traceid").val();
     start_interval_timer();
   });
@@ -1520,6 +1565,7 @@ $( document ).ready(function() {
 
   $( "#samples_to_plot" ).val( MAX_SAMPLES_TO_STORE_S );
   $('#samples_to_plot').change(function () {
+    samples = [];
     MAX_SAMPLES_TO_STORE_S = $("#samples_to_plot").val();
     MAX_REFRESH = true;
   });

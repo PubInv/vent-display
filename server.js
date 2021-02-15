@@ -50,6 +50,9 @@ parser.on('data', data =>{
   // being interpreted as a message. That possibly should be fixed, but I'm going to just
   // construct a buffer here.
   if (!NO_UDP) {
+    // This is an erroneous form that we have seen in crashes, but I don't know where it comes from.
+//    data = '{ "com" : "C" , "par" : "E" , "int" : "T" "A" , "val" : 150 }';
+
     const message = new Buffer(data);
     const client = dgram.createSocket('udp4');
     //    client.send(message, 0, message.length, 6111,"ventmon.coslabs.com", (err) => {
@@ -110,7 +113,7 @@ app.get('/api/pircs', function(req, res) {
 		err += "int not defined! ";
 	}
 	if (req.query.mod){
-		x += '"mod" : ' + req.query.mod + ' , ';
+		x += '"mod" : "' + req.query.mod + '" , ';
 	} else {
 		err += "mod not defined! ";
 	}
@@ -131,17 +134,12 @@ app.get('/api/pircs', function(req, res) {
 		res.setHeader("Content-Type", "application/json");
 		res.setHeader('Access-Control-Allow-Origin', '*');
 		res.status(200).send(x);
-          console.log("About to write:");
-          console.log(x);
-          console.log("done");
 		sport.write(x, (err) => {
 			if (err) {
 			return console.log('Error on write: ', err.message);
 			}
 		});
 	}
-
-	// { "com" : "C" , "par" : "P" , "int" : "T" , "mod" : 0 , "val" : 400 }
 });
 
 // /api/pircs2/C/P/T/0/400
