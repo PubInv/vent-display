@@ -585,7 +585,7 @@ var intervalID = null;
 
 // This sould be better as time, but is easier
 // to do as number of samples.
-var MAX_SAMPLES_TO_STORE_S = 16000;
+var MAX_SAMPLES_TO_STORE_S = 160;
 var MAX_REFRESH = false;
 var samples = [];
 var INITS_ONLY = true;
@@ -1118,6 +1118,16 @@ function get_date_of_sample(timestring,time_mark,ms) {
   return new Date(tm);
 }
 
+// epoch_ms is the milliseconds since the beginning of UNIX epoch
+function get_date_of_sample_simple(epoch_ms) {
+  var d = new Date();
+  var s = Math.floor(epoch_ms/1000);
+  var ms_in_s = epoch_ms-s;
+  var t = d.setTime(s);
+  d.setUTCMilliseconds(ms_in_s);
+  return d;
+}
+
 
 function process(samples) {
   const t = 200; // size of the window is 200ms
@@ -1214,7 +1224,7 @@ function process(samples) {
 
   // Return date in UTC time (as it comes to us)
   function time_of_extreme_samples(samples) {
-    var messages = samples.filter(s => s.event == 'E' && s.type == 'C');
+//    var messages = samples.filter(s => s.event == 'E' && s.type == 'C');
     // if our traces don't have monotone ms fields, this is an
     // unrecoverable error...
     var cur = 0;
@@ -1227,20 +1237,8 @@ function process(samples) {
     }
     var first_ms = samples[0].ms;
     var last_ms = samples[samples.length-1].ms;
-
-
-    if (messages.length == 0) {
-      return [null,null];
-    } else {
-      // We may need this to be more sophisticated; the is coming in
-      // from the PIRDS_webcgi as "Sat Jun 27 23:13:08 2020"
-      var timestring = messages[messages.length - 1].buff;
-      var time_mark = messages[messages.length - 1].ms;
-
-
-      return [get_date_of_sample(timestring,time_mark,first_ms),
-              get_date_of_sample(timestring,time_mark,last_ms)];
-    }
+    return [get_date_of_sample_simple(first_ms),
+            get_date_of_sample_simple(last_ms)];
   }
   var [start,finish] = time_of_extreme_samples(samples);
   $("#time_start").text((start) ? start.toISOStringSeconds() : null);
@@ -1464,40 +1462,50 @@ $("#startoperation").click(start_interval_timer);
 $("#stopoperation").click(stop_interval_timer);
 
 // Send PIRCS commands when START button is pressed
-$("#control-start").click(function(event) {
-  // Send a command to a connected device via serial port
-  console.log("Sending PIRCS...");
-  //Note: PIRCS uses specific units,
-  // which are designed to provide the right
-  // amount of precision without using
-  // floating point numbers.
-  // Often this means multiplying the
-  // common medical units by 10 to be the
-  // PIRCS units.
-  var dict = {
-    M: $("#control-mode").val(),
-    B: $("#control-rr").val()*10,
-    I: $("#control-ie").val(),
-    P: $("#control-pinsp").val()*10,
-    E: $("#control-peep").val()*10,
-  }
+    $("#control-start").click(
+      async function(event) {
+        // Send a command to a connected device via serial port
+        console.log("Sending PIRCS...");
+        //Note: PIRCS uses specific units,
+        // which are designed to provide the right
+        // amount of precision without using
+        // floating point numbers.
+        // Often this means multiplying the
+        // common medical units by 10 to be the
+        // PIRCS units.
+        var dict = {
+          M: $("#control-mode").val(),
+          B: $("#control-rr").val()*10,
+          I: $("#control-ie").val(),
+          P: $("#control-pinsp").val()*10,
+          E: $("#control-peep").val()*10,
+        }
 
-  for (var k in dict){
-    $.ajax({
-      //url: lh+"/api/pircs?com=C&par="+parName+"&int="+interp+"&mod="+modifier+"&val="+val,
-      type: 'GET',
-      url: 'http://localhost:5000/api/pircs/',
-      dataType: 'json',
-      data: { com: "C", par: k, int: "T", mod: "A", val: dict[k] }
-    }).done(function(result) {
-      console.log("result: " + JSON.stringify(result));
-    }).fail(function(xhr, ajaxOptions, thrownError) {
-      console.log("Error! " + xhr.status);
-      console.log(thrownError);
-    })
+        function sleep(ms) {
+          return new Promise(resolve => setTimeout(resolve, ms));
+        }
+        for (var k in dict){
+          // WARNING!!!!
+          // This is a workaround because we can easily create
+          // buffer overruns on the serial port of the an ESP32
+          // or Arduino. This really needs to be addressed in
+          // our Node Server, AND also made more robust in VentOS.
+          await sleep(500);
+          $.ajax({
+            //url: lh+"/api/pircs?com=C&par="+parName+"&int="+interp+"&mod="+modifier+"&val="+val,
+            type: 'GET',
+            url: 'http://localhost:5000/api/pircs/',
+            dataType: 'json',
+            data: { com: "C", par: k, int: "T", mod: "A", val: dict[k] }
+          }).done(function(result) {
+            console.log("result: " + JSON.stringify(result));
+          }).fail(function(xhr, ajaxOptions, thrownError) {
+            console.log("Error! " + xhr.status);
+            console.log(thrownError);
+          })
 
-  }
-});
+        }
+      });
 
 // Update values on slider change
 $("#control-mode").on("input", () => {

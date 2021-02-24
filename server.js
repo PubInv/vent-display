@@ -123,7 +123,13 @@ app.get('/api/pircs', function(req, res) {
 		err += "val not defined! ";
 	}
 	x += ' }\n';
-
+  // I think what we want to do is await here until
+  // we have gotten an acknowledgement of the command.
+  // that requires us to add a specific listener to stream
+  // we are reading to check it. This should help overiding the buffer.
+  // A way around this is to just change the html to set one value
+  // at a time. In any case there is a danger of a buffer overruns;
+  // this is very clear seen to be happening in the VentOS code.
 	if (err.length > 0){
 		err += "\n"
 		res.setHeader("Content-Type", "text/plain");
