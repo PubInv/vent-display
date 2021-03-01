@@ -8,6 +8,10 @@ var express = require('express');
 const cors = require('cors');
 var app = express();
 app.use(cors());
+
+// NOTE: We could enumerate porst with "SerialPort.list()"...
+// that would be a little friendlier for people who can't find
+// the filename of their serial port!
 const SerialPort = require('serialport'); //https://serialport.io/docs/guide-usage
 const Readline = require('@serialport/parser-readline');
 
@@ -43,6 +47,9 @@ sport.on('error', function(err) {
   console.log('Error: ', err.message)
 })
 
+// Note: I now believe we need to listen here for
+// Acknowledgements and do something special with them to
+// thottle the serial buffer.
 
 parser.on('data', data =>{
   // Let's see if the data is a PIRDS event...
@@ -139,12 +146,21 @@ app.get('/api/pircs', function(req, res) {
 
 		res.setHeader("Content-Type", "application/json");
 		res.setHeader('Access-Control-Allow-Origin', '*');
-		res.status(200).send(x);
+	  res.status(200).send(x);
+// The documentaiton supports this:
+// function writeAndDrain (data, callback) {
+//  port.write(data)
+//  port.drain(callback)
+// }
+          // Howewver, we are fundamentally asynchronous in processing
+          // requests, so it is unclear how this would work!
+          // Possibly we could call drain first!
+          sport.drain( () =>
 		sport.write(x, (err) => {
 			if (err) {
 			return console.log('Error on write: ', err.message);
 			}
-		});
+		}));
 	}
 });
 

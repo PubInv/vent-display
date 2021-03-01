@@ -122,7 +122,7 @@ function compute_fio2_mean(secs,samples) {
   }
 }
 
-
+// WARNING! With a low number of breaths, this may be wrong.
 function compute_respiration_rate(secs,samples,transitions,breaths) {
   // In order to compute the number of breaths
   // in the last s seconds, I compute those breaths
@@ -175,6 +175,7 @@ function compute_respiration_rate(secs,samples,transitions,breaths) {
       i--;
     }
     if ((cnt > 1) && (first_inhale_ms != last_inhale_ms)) {
+      // I now think this math is specious!!
       var inhalation_duration = last_inhale_ms - first_inhale_ms;
       var inhalation_duration_min = inhalation_duration / (60.0 * 1000.0);
       var rr = (cnt - 1) / inhalation_duration_min;
@@ -588,7 +589,7 @@ function testWorkSynthetic(){ // breaths give us inspiration transition points
     var vole = 0;
 
     var breaths = [];
-    var expiring = true;
+    var expiring = false;
 
     for(var i = 0; i < transitions.length; i++) {
       // We're looking for the end of the inhalation here!!
@@ -676,6 +677,12 @@ function computeMovingWindowTrace(samples,t,v) {
     var voli = 0;
     var vole = 0;
 
+    // This code was robust when I breathed through a mask,
+    // but on clean simulations with negative flow, seemes to
+    // go awry...
+    // It think really it makes more sense to find the first
+    // transition from a non-inspiring state to an inspiring state
+    // and start there.
     for(var i = 0; i < transitions.length; i++) {
       // We're looking for the end of the inhalation here!!
       if (((i -1) >= 0) && transitions[i-1].state == 1 && (transitions[i].state == 0 || transitions[i].state == -1 )) {
@@ -698,7 +705,7 @@ function computeMovingWindowTrace(samples,t,v) {
         vole = integrateSamples(last,transitions[i].sample,flows);
         last = transitions[i].sample;
       }
-      if (!expiring && transitions[i].state == -1) {
+      if (!expiring && (transitions[i].state == -1)) {
         expiring = true;
         voli = integrateSamples(last,transitions[i].sample,flows);
         last = transitions[i].sample;
