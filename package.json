@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "cors": "^2.8.5",
+    "serialport": "^9.0.6",
+    "yargs": "^16.2.0"
+  }
+}

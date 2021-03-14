@@ -1,0 +1,46 @@
+  <div class="row">
+    <div class="col-6">
+    <div class="control-wrapper row">
+      <label class="col-2" for="control-mode">Mode:</label>
+      <input class="col-9" type="range" id="control-mode" name="control-mode" min="0" max="2" value="0"/>
+      <label class="col-1" id="control-mode-val">PCV</label>
+    </div>
+    <div class="control-wrapper row">
+      <label class="col-2" for="control-rr">RR:</label>
+      <input class="col-9" type="range" id="control-rr" name="control-rr" min="1" max="30" value="12"/>
+      <label class="col-1" id="control-rr-val">12</label>
+    </div>
+    <div class="control-wrapper row">
+      <label class="col-2" for="control-ie">EI (x10) :</label>
+      <input class="col-9" type="range" id="control-ie" name="control-ie" min="5" max="50" step="1" value="30"/>
+      <label class="col-1" id="control-ie-val">30</label>
+    </div>
+    <div class="control-wrapper row">
+      <label class="col-2" for="control-pinsp">Pinsp (cmH20):</label>
+      <input class="col-9" type="range" id="control-pinsp" name="control-pinsp" min="10" max="50" value="35"/>
+      <label class="col-1" id="control-pinsp-val">35</label>
+    </div>
+    <div class="control-wrapper row">
+      <label class="col-2" for="control-vinsp">Vinsp:</label>
+      <input class="col-9" type="range" id="control-vinsp" name="control-vinsp" min="200" max="800" step="20" value="500"/>
+      <label class="col-1" id="control-vinsp-val">500</label>
+    </div>
+    <div class="control-wrapper row">
+      <label class="col-2" for="control-peep">PEEP (cmH20):</label>
+      <input class="col-9" type="range" id="control-peep" name="control-peep" min="0" max="15" value="5"/>
+      <label class="col-1" id="control-peep-val">5</label>
+    </div>
+
+
+    <button id="control-start" type="button" class="btn btn-primary">START</button>
+  </div>
+
+  <div class="col-6">
+    <div>
+      <b>Status:</b> no device connected
+    </div>
+    <div>
+      <b>Log:</b> some log info
+    </div>
+  </div>
+</div>
