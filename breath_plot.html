@@ -437,8 +437,9 @@ an interactive or static analysis of a respiration. It&#39;s primary purpose is 
 
   <!-- CONTROL PANEL START -->
   <div class="container-fluid" id="control-area">
-    <button id="show_controls" type="button" class="btn btn-primary">EPAND/COLLAPSE CONTROLS</button>
-<div id="control-slot">
+    <button id="show_controls" type="button" class="btn btn-primary">EXPAND/COLLAPSE CONTROLS</button>
+    <div id="control-slot">
+    <p>Note: This is an experimental feature designed to be used with serialserver.js, specifially with a VentOS-powered device. If those words mean nothing to you, this feature is probably not for you!</p>
   <div class="row">
     <div class="col-6">
     <div class="control-wrapper row">
@@ -2255,6 +2256,7 @@ $("#control-peep").on("input", () => {
 
 $( document ).ready(function() {
 
+  $("#control-slot").hide();
   // CONTROL PANEL INIT START
   $("#show_controls").click(function() {
     $("#control-slot").toggle();
