@@ -29,8 +29,10 @@ if (NO_UDP) {
   console.log("Becaue uport and uaddress both null, doing no UDP reporting!");
 }
 
-
-const sport = new SerialPort(sport_name, { baudRate: 19200 });
+// VentOS uses 19200, but the VentMon uses 500000
+const VentOSRate = 19200
+const VentMon = 500000
+const sport = new SerialPort(sport_name, { baudRate: VentMon });
 
 const parser = sport.pipe(new Readline());// Read the port data
 
