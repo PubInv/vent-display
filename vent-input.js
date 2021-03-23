@@ -4,12 +4,14 @@ template.innerHTML = `
 	.vent-input {
 		width:100px;
 		height:100px;
-		
+		padding:5px;
 	}
 
-	.val {
+	.v {
 		font-size: 3em;
 		color: #ffffff;
+		display:block;
+		width: 100%;
 	}
 
 	.name {
@@ -21,10 +23,20 @@ template.innerHTML = `
 		display: block;
 		width: 100%;
 		height: 100%;
-		border: none;
-		background-color: #20B2AA;
+		border: solid 1px #105955;
+		background-color: #90D9D5;
+		border-radius: 10px;
 		cursor: pointer;
 		padding: 14px 28px;
+	}
+
+	not-selected {
+		background-color: #90D9D5;
+	}
+
+	button:focus {
+		background-color: #C6ECE9;
+		outline: none;
 	}
 	
 </style>
@@ -32,8 +44,9 @@ template.innerHTML = `
 
 <div class = "vent-input">
 	<button ventinput>
-		<span class="val">00</span>
-		<span class="label">abc</span>
+		<div class="v">00</div>
+		<div class="l">label</div>
+		<div class="u">unit</div>
 	</button>
 </div>		
 `;
@@ -43,7 +56,7 @@ class VentInput extends HTMLElement {
 	// Specify observed attributes so that
   	// attributeChangedCallback will work
 	static get observedAttributes() {
-		return ['val', 'label'];
+		return ['v', 'l', 'u'];
 	}
 	
 	constructor() {
@@ -57,22 +70,33 @@ class VentInput extends HTMLElement {
 	
 	connectedCallback() {
 		this._ventbutton = this.shadowRoot.querySelector(".vent-input");
-		this.shadowRoot.querySelector("button").addEventListener('click', this._doSomething.bind(this));
+		this.shadowRoot.querySelector("button").addEventListener('click', this._onClick.bind(this));
 		this.shadowRoot.querySelector("button").addEventListener('wheel', this._scroll.bind(this));
+		this.shadowRoot.querySelector("button").addEventListener("mouseleave", this._stopScroll.bind(this));
 	}
 
 	diconnectedCallback(){
-		this.shadowRoot.querySelector("button").removeEventListener('click', this._doSomething);
+		this.shadowRoot.querySelector("button").removeEventListener('click', this._onClick);
 		this.shadowRoot.querySelector("button").removeEventListener('wheel', this._scroll);
 	}
 
 	attributeChangedCallback(name, oldValue, newValue) {
-		if (name == 'val') {
-			this.shadowRoot.querySelector('.val').innerHTML = newValue;
+		if (name == 'v') {
+			this.shadowRoot.querySelector('.v').innerHTML = newValue;
 			this._currentVal = newValue;		
 		}
-		else if (name == 'label') {
-			this.shadowRoot.querySelector('.label').innerHTML = newValue;
+		else if (name == 'l') {
+			this.shadowRoot.querySelector('.l').innerHTML = newValue;
+		}
+		else if (name == 'u') {
+			this.shadowRoot.querySelector('.u').innerHTML = newValue;
+		}
+	}
+
+	_stopScroll(){
+		if (this._isSelected){ 
+			this._isSelected = false;
+			this.shadowRoot.querySelector("button").blur();
 		}
 	}
 	
@@ -86,13 +110,13 @@ class VentInput extends HTMLElement {
 				this._currentVal--;
 			}
 		
-			this.shadowRoot.querySelector('.val').innerHTML = this._currentVal;
+			this.shadowRoot.querySelector('.v').innerHTML = this._currentVal;
 		}
 	}
 	  
 	
-	_doSomething(){
-		this._isSelected = !this._isSelected;
+	_onClick(){
+		this._isSelected = true;;
 	}
 	
 	
