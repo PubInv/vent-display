@@ -17,7 +17,7 @@ can find both live and [static](http://ventmon.coslabs.com/breath_plot?i=71.245.
 For a hands on demonstration of Vent Display and in-depth explanation of VentMon watch our screen cast (demonstration of Vent Display occurrs at 10:56).    
 [VentMon ScreenCast](https://www.youtube.com/watch?v=OV9MrMjVOCI)
 
-# Vounteer Needed
+# Volunteer Needed
 
 This is a project with a rich set of features that need to be added involving respiration calculations. 
 Additionally, there are GUI features such as as the ability to scroll back in time that need to be added. Please contact <read.robert@gmail.com> if you would like to volunteer.
