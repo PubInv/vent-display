@@ -1,0 +1,41 @@
+#preamble {
+    background: red;
+    display: none;
+}
+
+#timetop {
+   display: none;
+}
+
+#PFGraph {
+    position: relative;
+    top: -80px;
+/*    right-margin: -40px;*/
+     width: 110%;
+    /* max-width: 40%; */
+    z-index: -1;
+}
+
+#EventsGraph {
+/*    position: relative; */
+/*    margin-top: -20%; */
+    /* z-index: -2; */
+}
+
+.fence {
+    width: 2em;
+    font-size: xx-small;
+}
+
+.calcnum {
+    color: blue;
+    font-size: normal;
+}
+
+#calcarea {
+  flex-direction:column;
+  background: AliceBlue;
+  font-size: small;
+  padding-left: 4px;
+  padding-right: 1px;
+}

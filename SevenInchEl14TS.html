@@ -1,0 +1,294 @@
+  <!--
+ SevenInchEl14TS.html: COVID-19 Respiration Analysis Software for the Element14 7" Touch Screen
+    Copyright (C) 2021  Robert L. Read
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as
+    published by the Free Software Foundation, either version 3 of the
+    License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <!--    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+      -->
+
+
+    <link href="https://cdn.jsdelivr.net/gh/gitbrent/bootstrap4-toggle@3.6.1/css/bootstrap4-toggle.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" type="text/css" href="css/standard.css" media="screen"/>
+
+    <link rel="stylesheet" type="text/css" href="css/SevenInchEl14TS.css" media="screen"/>
+
+
+    <title>Public Invention Respiration Analysis</title>
+
+  </head>
+
+  <body>
+
+    <div class="container-fluid">
+      <label for="livetoggle">Plot Live</label>
+      <label class="switch">
+        <input type="checkbox" id="livetoggle" checked>
+        <span class="slider round"></span>
+      </label>
+
+      <div class="btn-group" role="group" aria-label="Basic example">
+        <button type="button" class="btn btn-primary" id="5s_btn">5s</button>
+        <button type="button" class="btn btn-primary" id="10s_btn">10s</button>
+        <button type="button" class="btn btn-primary" id="15s_btn">15s</button>
+        <button type="button" class="btn btn-primary" id="30s_btn">30s</button>
+        <button type="button" class="btn btn-primary" id="60s_btn">60s</button>
+        <button type="button" class="btn btn-primary" id="120s_btn">120s</button>
+        <button type="button" class="btn btn-primary" id="180s_btn">180s</button>
+        <button type="button" class="btn btn-primary" id="300s_btn">300s</button>
+      </div>
+
+      <div class="container-fluid">
+        <div class="row">
+          <div class="col-8">
+            <div id='PFGraph'><!-- Pressure and Flow Graph --></div>
+          </div>
+          <div class="col-2">
+
+            <div class="alert alert-danger" role="alert" id="main_alert">
+              Danger! Flow limits exceeded; volumes will be incorrect.
+            </div>
+            <div class="container" id="calcarea">
+              <div>
+                <label for="max">PIP (max): </label>
+                <div class="value_and_fences">
+                  <div class="calcnum">
+                    <label id="max"> </label>
+                  </div>
+                  <div class="vertical_alarms">
+                    <div class="limit max">
+                      <label for="max_h">H:</label>
+                      <input class="fence" id="max_h" type='text'> </input>
+                    </div>
+                    <div class="limit min">
+                      <label for="max_l">L:</label>
+                      <input class="fence" id="max_l" type='text'> </input>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- I don't believe this is valuable enough to use on the 800x400 screen
+                   <div>
+                     <label for="avg">P. Mean: </label>
+                     <div class="value_and_fences">
+                       <div class="calcnum">
+                         <label id="avg"> </label>
+                       </div>
+                       <div class="vertical_alarms">
+                         <div class="limit max">
+                           <label for="avg_h">H:</label>
+                           <input class="fence" id="avg_h" type='text'> </input>
+                         </div>
+                         <div class="limit min">
+                           <label for="avg_l">L:</label>
+                           <input class="fence" id="avg_l" type='text'> </input>
+                         </div>
+                       </div>
+                     </div>
+                   </div>
+                   -->
+                   <div>
+                     <label for="min">PEEP (min): </label>
+                     <div class="value_and_fences">
+                       <div class="calcnum">
+                         <label id="min"> </label>
+                       </div>
+                       <div class="vertical_alarms">
+                         <div class="limit max">
+                           <label for="min_h">H:</label>
+                           <input class="fence" id="min_h" type='text'> </input>
+                         </div>
+                         <div class="limit min">
+                           <label for="min_l">L:</label>
+                           <input class="fence" id="min_l" type='text'> </input>
+                         </div>
+                       </div>
+                     </div>
+                   </div>
+                   <div>
+                     <label for="mv">MVs (l/min): </label>
+                     <div class="value_and_fences">
+                       <div class="calcnum">
+                         <label id="mv"> </label>
+                       </div>
+                       <div class="vertical_alarms">
+                         <div class="limit max">
+                           <label for="mv_h">H:</label>
+                           <input class="fence" id="mv_h" type='text'> </input>
+                         </div>
+                         <div class="limit min">
+                           <label for="mv_l">L:</label>
+                           <input class="fence" id="mv_l" type='text'> </input>
+                         </div>
+                       </div>
+                     </div>
+                   </div>
+                   <div>
+                     <label for="bpm">RR: </label>
+                     <div class="value_and_fences">
+                       <div class="calcnum">
+                         <label id="bpm"> </label>
+                       </div>
+                       <div class="vertical_alarms">
+                         <div class="limit max">
+                           <label for="bmp_h">H:</label>
+                           <input class="fence" id="bpm_h" type='text'> </input>
+                         </div>
+                         <div class="limit min">
+                           <label for="bpm_l">L:</label>
+                           <input class="fence" id="bpm_l" type='text'> </input>
+                         </div>
+                       </div>
+                     </div>
+                   </div>
+                   <div>
+                     <label for="ier">I:E ratio: </label>
+                     <div class="value_and_fences">
+                       <div class="calcnum">
+                         <label id="ier"> </label>
+                       </div>
+                       <div class="vertical_alarms">
+                         <div class="limit max">
+                           <label for="ier_h">H:</label>
+                           <input class="fence" id="ier_h" type='text'> </input>
+                         </div>
+                         <div class="limit min">
+                           <label for="ier_l">L:</label>
+                           <input class="fence" id="ier_l" type='text'> </input>
+                         </div>
+                       </div>
+                     </div>
+                   </div>
+            </div>
+          </div>
+          <div class="col-2">
+            <div class="container" id="calcarea">
+              <div>
+                <label for="tv">VTd (ml): </label>
+                <div class="value_and_fences">
+                  <div class="calcnum">
+                    <label id="tv"> </label>
+                  </div>
+                  <div class="vertical_alarms">
+                    <div class="limit max">
+                      <label for="tv_h">H:</label>
+                      <input class="fence" id="tv_h" type='text'> </input>
+                    </div>
+                    <div class="limit min">
+                      <label for="tv_l">L:</label>
+                      <input class="fence" id="tv_l" type='text'> </input>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <label for="fio2">FiO2 Mean (%): </label>
+                <div class="value_and_fences">
+                  <div class="calcnum">
+                    <label id="fio2"> </label>
+                  </div>
+                  <div class="vertical_alarms">
+                    <div class="limit max">
+                      <label for="fio2_h">H:</label>
+                      <input class="fence" id="fio2_h" type='text'> </input>
+                    </div>
+                    <div class="limit min">
+                      <label for="fio2_l">L:</label>
+                      <input class="fence" id="fio2_l" type='text'> </input>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <label for="taip">Rise Time (ms): </label>
+                  <div class="value_and_fences">
+                    <div class="calcnum">
+                      <label id="taip"> </label>
+                    </div>
+                    <div class="vertical_alarms">
+                      <div class="limit max">
+                        <label for="taip_h">H:</label>
+                        <input class="fence" id="taip_h" type='text'> </input>
+                      </div>
+                      <div class="limit min">
+                        <label for="taip_l">L:</label>
+                        <input class="fence" id="taip_l" type='text'> </input>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <label for="taip">Fall Time (ms): </label>
+                  <div class="value_and_fences">
+                    <div class="calcnum">
+                      <label id="trip"> </label>
+                    </div>
+                    <div class="vertical_alarms">
+                      <div class="limit max">
+                        <label for="trip_h">H:</label>
+                        <input class="fence" id="trip_h" type='text'> </input>
+                      </div>
+                      <div class="limit min">
+                        <label for="trip_l">L:</label>
+                        <input class="fence" id="trip_l" type='text'> </input>
+                      </div>
+                    </div>
+                  </div>
+                  <div>
+                    <label for="wob">W. of B. (J/L): </label>
+                    <div class="value_and_fences">
+                      <div class="calcnum">
+                        <label id="wob"> </label>
+                      </div>
+                      <div class="vertical_alarms">
+                        <div class="limit max">
+                          <label for="wob_h">H:</label>
+                          <input class="fence" id="wob_h" type='text'> </input>
+                        </div>
+                        <div class="limit min">
+                          <label for="wob_l">L:</label>
+                          <input class="fence" id="wob_l" type='text'> </input>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div> <!-- end main area -->
+    </div>
+</div>
+  </body>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/gitbrent/bootstrap4-toggle@3.6.1/js/bootstrap4-toggle.min.js"></script>
+
+  <!-- Load plotly.js into the DOM -->
+  <script src='https://cdn.plot.ly/plotly-latest.min.js'></script>
+
+  <script>
+    const SEVENINCHEL14TS = true;
+  </script>
+  <script src='js/respiration_math.js'></script>
+  <script src='js/breath_plot_ctl.js'></script>
