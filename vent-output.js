@@ -1,15 +1,15 @@
 class VentOutput extends HTMLElement {
-	// Specify observed attributes so that
-	// attributeChangedCallback will work
-	static get observedAttributes() {
-		return ["v", "l", "u"];
-	}
+  // Specify observed attributes so that
+  // attributeChangedCallback will work
+  static get observedAttributes() {
+    return ["v", "l", "u"];
+  }
 
-	constructor() {
-		super();
-		this._ventbutton;
-		this.attachShadow({ mode: "open" });
-		this.shadowRoot.innerHTML = `
+  constructor() {
+    super();
+    this._ventbutton;
+    this.attachShadow({ mode: "open" });
+    this.shadowRoot.innerHTML = `
 		<style>
 		.flex-container {
 			display: flex;
@@ -21,12 +21,12 @@ class VentOutput extends HTMLElement {
 				
 				border: solid 1px #105955;
 				background-color: #90D9D5;
-				border-radius: 10px;
+				border-radius: 2%;
 				cursor: default;
-				width:300px;
-				height:100px;
-				padding:5px;
-				margin: 5px;
+				width:75%;
+				height:25%;
+				padding:2%;
+				margin: 1%;
 			}
 			.box {
 				text-align:center;
@@ -81,7 +81,7 @@ class VentOutput extends HTMLElement {
 				<span class="vertical_alarms">
 				<div class="limit_max">
                 	<label for="max_h">H:</label>
-                	<input class="box" id="max_h" type='text' value="48"> </input>
+                	<input class="box" id="max_h" type='text' value=""> </input>
                 </div>
 		
 				<div class="limit_min">
@@ -99,23 +99,23 @@ class VentOutput extends HTMLElement {
 			
 		</div>		
 		`;
-	}
+  }
 
-	connectedCallback() {
-		this._ventbutton = this.shadowRoot.querySelector(".vent-output");
-	}
+  connectedCallback() {
+    this._ventbutton = this.shadowRoot.querySelector(".vent-output");
+  }
 
-	diconnectedCallback() {}
+  diconnectedCallback() {}
 
-	attributeChangedCallback(name, oldValue, newValue) {
-		if (name == "v") {
-			this.shadowRoot.querySelector(".v").innerHTML = newValue;
-			this._currentVal = newValue;
-		} else if (name == "l") {
-			this.shadowRoot.querySelector(".l").innerHTML = newValue;
-		} else if (name == "u") {
-			this.shadowRoot.querySelector(".u").innerHTML = newValue;
-		}
-	}
+  attributeChangedCallback(name, oldValue, newValue) {
+    if (name == "v") {
+      this.shadowRoot.querySelector(".v").innerHTML = newValue;
+      this._currentVal = newValue;
+    } else if (name == "l") {
+      this.shadowRoot.querySelector(".l").innerHTML = newValue;
+    } else if (name == "u") {
+      this.shadowRoot.querySelector(".u").innerHTML = newValue;
+    }
+  }
 }
 customElements.define("vent-output", VentOutput);
