@@ -79,10 +79,10 @@ class VentOutput extends HTMLElement {
 			<div class="container">
 				<div>
 				 <span class="v">00</span>
-				<vent-input l="Pinsp" v="45" u="cmH2O"></vent-input>
 				<br>
 				<span class="l">label</span>
 				<span class="u">cmH2O</span>
+				<vent-input l="Pinsp" v="45" u="cmH2O"></vent-input>
 				</div>
 			</div>	
 
