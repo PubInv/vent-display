@@ -72,7 +72,7 @@ parser.on('data', data =>{
       client.close();
   });
   }
-  console.log(data);
+  // console.log(data);
 });
 
 
