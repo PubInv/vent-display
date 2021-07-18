@@ -15,7 +15,7 @@ You can see the vent-display from our [public data lake](http://ventmon.coslabs.
 can find both live and [static](http://ventmon.coslabs.com/breath_plot?i=71.245.238.32.test_file_name.20200612135337) displays.
 
 For a hands on demonstration of Vent Display and in-depth explanation of VentMon watch our screen cast (demonstration of Vent Display occurs at 10:56).    
-[VentMon ScreenCast](https://youtu.be/OV9MrMjVOCI?t=638^)
+[VentMon ScreenCast](https://youtu.be/OV9MrMjVOCI?t=638)
 
 # The Control Interface
 
