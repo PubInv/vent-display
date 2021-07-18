@@ -1,4 +1,4 @@
-const template = document.createElement('template');
+const template = document.createElement("template");
 template.innerHTML = `
 <style>
 	.vent-input {
@@ -43,82 +43,82 @@ template.innerHTML = `
 
 
 <div class = "vent-input">
-	<button ventinput>
-		<div class="v">00</div>
-		<div class="l">label</div>
-		<div class="u">unit</div>
-	</button>
+	
 </div>		
 `;
 
-
 class VentInput extends HTMLElement {
-	// Specify observed attributes so that
-  	// attributeChangedCallback will work
-	static get observedAttributes() {
-		return ['v', 'l', 'u'];
-	}
-	
-	constructor() {
-		super();
-		this._ventbutton;
-		this._isSelected = false;
-		this._currentVal = 0;
-		this.attachShadow({ mode: 'open' });
-		this.shadowRoot.appendChild(template.content.cloneNode(true));
-	}
-	
-	connectedCallback() {
-		this._ventbutton = this.shadowRoot.querySelector(".vent-input");
-		this.shadowRoot.querySelector("button").addEventListener('click', this._onClick.bind(this));
-		this.shadowRoot.querySelector("button").addEventListener('wheel', this._scroll.bind(this));
-		this.shadowRoot.querySelector("button").addEventListener("mouseleave", this._stopScroll.bind(this));
-	}
+  // Specify observed attributes so that
+  // attributeChangedCallback will work
+  static get observedAttributes() {
+    return ["v", "l", "u"];
+  }
 
-	diconnectedCallback(){
-		this.shadowRoot.querySelector("button").removeEventListener('click', this._onClick);
-		this.shadowRoot.querySelector("button").removeEventListener('wheel', this._scroll);
-	}
+  constructor() {
+    super();
+    this._ventbutton;
+    this._isSelected = false;
+    this._currentVal = 0;
+    this.attachShadow({ mode: "open" });
+    this.shadowRoot.appendChild(template.content.cloneNode(true));
+  }
 
-	attributeChangedCallback(name, oldValue, newValue) {
-		if (name == 'v') {
-			this.shadowRoot.querySelector('.v').innerHTML = newValue;
-			this._currentVal = newValue;		
-		}
-		else if (name == 'l') {
-			this.shadowRoot.querySelector('.l').innerHTML = newValue;
-		}
-		else if (name == 'u') {
-			this.shadowRoot.querySelector('.u').innerHTML = newValue;
-		}
-	}
+  connectedCallback() {
+    this._ventbutton = this.shadowRoot.querySelector(".vent-input");
+    this.shadowRoot
+      .querySelector("button")
+      .addEventListener("click", this._onClick.bind(this));
+    this.shadowRoot
+      .querySelector("button")
+      .addEventListener("wheel", this._scroll.bind(this));
+    this.shadowRoot
+      .querySelector("button")
+      .addEventListener("mouseleave", this._stopScroll.bind(this));
+  }
 
-	_stopScroll(){
-		if (this._isSelected){ 
-			this._isSelected = false;
-			this.shadowRoot.querySelector("button").blur();
-		}
-	}
-	
-	_scroll(event) {
-		if (this._isSelected){
-			event.preventDefault();
+  diconnectedCallback() {
+    this.shadowRoot
+      .querySelector("button")
+      .removeEventListener("click", this._onClick);
+    this.shadowRoot
+      .querySelector("button")
+      .removeEventListener("wheel", this._scroll);
+  }
 
-			if (event.deltaY < 0) {
-				this._currentVal++;
-			} else {
-				this._currentVal--;
-			}
-		
-			this.shadowRoot.querySelector('.v').innerHTML = this._currentVal;
-		}
-	}
-	  
-	
-	_onClick(){
-		this._isSelected = true;;
-	}
-	
-	
+  attributeChangedCallback(name, oldValue, newValue) {
+    if (name == "v") {
+      this.shadowRoot.querySelector(".v").innerHTML = newValue;
+      this._currentVal = newValue;
+    } else if (name == "l") {
+      this.shadowRoot.querySelector(".l").innerHTML = newValue;
+    } else if (name == "u") {
+      this.shadowRoot.querySelector(".u").innerHTML = newValue;
+    }
+  }
+
+  _stopScroll() {
+    if (this._isSelected) {
+      this._isSelected = false;
+      this.shadowRoot.querySelector("button").blur();
+    }
+  }
+
+  _scroll(event) {
+    if (this._isSelected) {
+      event.preventDefault();
+
+      if (event.deltaY < 0) {
+        this._currentVal++;
+      } else {
+        this._currentVal--;
+      }
+
+      this.shadowRoot.querySelector(".v").innerHTML = this._currentVal;
+    }
+  }
+
+  _onClick() {
+    this._isSelected = true;
+  }
 }
-customElements.define('vent-input', VentInput);
+customElements.define("vent-input", VentInput);
