@@ -43,7 +43,11 @@ template.innerHTML = `
 
 
 <div class = "vent-input">
-	
+  <button ventinput>
+  <div class="v">00</div>
+  <div class="l">label</div>
+  <div class="u">unit</div>
+  </button>
 </div>		
 `;
 
