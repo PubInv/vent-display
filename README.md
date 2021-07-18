@@ -19,7 +19,7 @@ For a hands on demonstration of Vent Display and in-depth explanation of VentMon
 
 # The Control Interface
 
-Public Invention, with help from the VentOS project from Helpful Engineering, is build Respireco, a complete, modular, composable respiration ecosystem.
+Public Invention, with help from the VentOS project from Helpful Engineering, is building Respireco, a complete, modular, composable respiration ecosystem.
 In March 2021, we added a (collapsible) "control interface" to VentDisplay which controls the parameters of a mechanical ventilator. 
 This outputs the resulting commands in the [Public Invention Respiration Control Standard (PIRCS)](https://github.com/PubInv/PIRCS-pubinv-respiration-control-standard) to a webserver via Ajax. The primary use case is for this information to be transmitted to a microcontroller running the [VentOS](https://gitlab.com/project-ventos/ventos) ventilation Open Source Operating System platform, a project of [Helpful Engineering](https://helpfulengineering.org/).
 
@@ -46,7 +46,7 @@ A typical use case for serialserver.js is to log the action of the [VentMon](htt
 A second use is to log data (either real or mock data) produced by the [VentOS system](https://gitlab.com/project-ventos/ventos), independent of the VentMon. These two use cases are an 
 example of composability of the PubInv Respireco system. 
 
-# Vounteer Needed
+# Volunteer Needed
 
 This is a project with a rich set of features that need to be added involving respiration calculations. 
 Additionally, there are GUI features such as the ability to scroll back in time that need to be added. Please contact <read.robert@gmail.com> if you would like to volunteer.
