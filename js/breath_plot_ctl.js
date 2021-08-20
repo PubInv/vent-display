@@ -501,6 +501,8 @@ function plot(samples, trans, breaths) {
        event_graph.push(o);
      }
 
+  const SMALL_HEIGHT = 500;
+  const LARGE_HEIGHT = 800;
 
     // I'm going to try putting the pressure
     // in faintly to make the graphs match
@@ -508,7 +510,7 @@ function plot(samples, trans, breaths) {
     var event_layout = {
       title: SEVENINCHEL14TS ? '' : 'Events',
       showlegend: false,
-      height: SEVENINCHEL14TS ? 400 : null,
+      height: SEVENINCHEL14TS ? SMALL_HEIGHT : LARGE_HEIGHT,
       xaxis: {domain: [0.0,1.0]},
       yaxis: {
         range: [-100.0, 100.0]
@@ -522,7 +524,7 @@ function plot(samples, trans, breaths) {
   var maxseconds = Math.ceil(total_seconds);
     var layout = {
       title: SEVENINCHEL14TS ? '' : 'VentMon Breath Analysis',
-      height: SEVENINCHEL14TS ? 500 : null,
+      height: SEVENINCHEL14TS ? SMALL_HEIGHT : LARGE_HEIGHT,
       showlegend: false,
 
       xaxis: {domain: [0.0,1.0],
@@ -817,6 +819,84 @@ function sanitize_samples(samples) {
   return samples;
 }
 
+function processNewSamples(cur_sam) {
+  // WARNING: This is a hack...if the timestamp is negative,
+  // we treat it as a limited (beyond range of sensor) measurement.
+  // Our goal is to warn about this, but for now we will just
+  // ignore and correct.
+  MAX_REFRESH = false;
+  if (cur_sam == null) {
+    console.log("No return");
+    return;
+  }
+  //            console.log("returned ",cur_sam.length,cur_sam);
+  if (cur_sam && cur_sam.length == 0) {
+    // This is no longer true now that we are asking for time...
+    //   console.log("no samples; potential misconfiguration!");
+    LAST_SAMPLE_DATE = REQUEST_FINAL_SAMPLE;
+  } else {
+    if (typeof(cur_sam) == "string") {
+      console.log("Error!",cur_sam);
+      stop_interval_timer();
+      $("#livetoggle").prop("checked",false);
+      console.log(cur_sam);
+    } else {
+      cur_sam = sanitize_samples(cur_sam);
+      if (INITS_ONLY) {
+	samples = cur_sam;
+	INITS_ONLY = false;
+      } else {
+        console.log("cursuam: a,z : ",cur_sam[0].ms,cur_sam[cur_sam.length-1].ms);
+
+        var first_new_ms = cur_sam[0].ms;
+        //                  var cur_first_ms = samples[0].ms;
+        // THIS IS WRONG
+        // if (first_new_ms < cur_first_ms) { // This means a reset of the Arduino, we will dump samples..
+        //   samples = [];
+        //   console.log("DETECTED ARDUINO RESET, DUMPING CURRENT SAMPLES");
+        // }
+        var discard = Math.max(0,
+                               samples.length + cur_sam.length - MAX_SAMPLES_TO_STORE_S);
+	samples = samples.slice(discard);
+      }
+
+      // This is leading to an inconsistency!!
+      samples = samples.concat(cur_sam);
+      samples.sort((a,b) => a.ms < b.ms);
+      // We are not guaranteeed to get samples in order
+      // we sort them....
+      // We also need to de-dup them.
+      // This would be more efficient if done after sorting..
+      var n = samples.length;
+
+      // I think this is de-dupeing code...
+      samples = samples.filter((s, index, self) =>
+        self.findIndex(t => t.ms === s.ms
+                       && t.type === s.type
+                       && t.loc === s.loc
+                       && t.num === s.num
+                       && t.event === s.event
+                       && t.val === s.val) === index);
+    }
+
+    if (n != samples.length) {
+      console.log("deduped:",n-samples.length);
+    }
+
+    // Now we will trim off samples if we are live...
+    if (intervalID) {
+      var last_ms = samples[samples.length-1].ms
+      samples = samples.filter((s, index, self) =>
+        s.ms >= (last_ms - DESIRED_DURATION_S*1000));
+    }
+    //              console.log(samples);
+    if (samples.length > 0)
+      process(samples);
+    console.log("END",LAST_SAMPLE_DATE);
+  }
+}
+
+
 // TODO: This is bad when it fires another request while a request is in play.
 function retrieveAndPlot(){
   var trace_piece = (TRACE_ID) ? "/" + TRACE_ID : "";
@@ -865,8 +945,9 @@ function retrieveAndPlot(){
     $.ajax({url: DSERVER_URL +"data/" + FILE_NAME_OVERRIDE,
           success: function(ra){
             console.dir(ra);
-            var converted = respiraworks_to_PIRDS(ra)
-            console.dir(ra);
+            var converted = respiraworks_to_PIRDS(ra);
+            console.dir(converted);
+            processNewSamples(converted);
           },
           error: function(xhr, ajaxOptions, thrownError) {
 	    console.log("FILE_NAME Error!" + xhr.status);
@@ -876,81 +957,7 @@ function retrieveAndPlot(){
   } else {
     $.ajax({url: url,
           success: function(cur_sam){
-
-            // WARNING: This is a hack...if the timestamp is negative,
-            // we treat it as a limited (beyond range of sensor) measurement.
-            // Our goal is to warn about this, but for now we will just
-            // ignore and correct.
-            MAX_REFRESH = false;
-            if (cur_sam == null) {
-              console.log("No return");
-              return;
-            }
-//            console.log("returned ",cur_sam.length,cur_sam);
-            if (cur_sam && cur_sam.length == 0) {
-              // This is no longer true now that we are asking for time...
-              //   console.log("no samples; potential misconfiguration!");
-              LAST_SAMPLE_DATE = REQUEST_FINAL_SAMPLE;
-            } else {
-              if (typeof(cur_sam) == "string") {
-                console.log("Error!",cur_sam);
-                stop_interval_timer();
-                $("#livetoggle").prop("checked",false);
-                console.log(cur_sam);
-              } else {
-                cur_sam = sanitize_samples(cur_sam);
-	        if (INITS_ONLY) {
-	          samples = cur_sam;
-	          INITS_ONLY = false;
-	        } else {
-                  console.log("cursuam: a,z : ",cur_sam[0].ms,cur_sam[cur_sam.length-1].ms);
-
-                  var first_new_ms = cur_sam[0].ms;
-//                  var cur_first_ms = samples[0].ms;
-                  // THIS IS WRONG
-                  // if (first_new_ms < cur_first_ms) { // This means a reset of the Arduino, we will dump samples..
-                  //   samples = [];
-                  //   console.log("DETECTED ARDUINO RESET, DUMPING CURRENT SAMPLES");
-                  // }
-                  var discard = Math.max(0,
-                                         samples.length + cur_sam.length - MAX_SAMPLES_TO_STORE_S);
-	          samples = samples.slice(discard);
-	        }
-
-                // This is leading to an inconsistency!!
-	        samples = samples.concat(cur_sam);
-                samples.sort((a,b) => a.ms < b.ms);
-	        // We are not guaranteeed to get samples in order
-	        // we sort them....
-                // We also need to de-dup them.
-                // This would be more efficient if done after sorting..
-                var n = samples.length;
-
-                // I think this is de-dupeing code...
-                samples = samples.filter((s, index, self) =>
-                                         self.findIndex(t => t.ms === s.ms
-                                                        && t.type === s.type
-                                                        && t.loc === s.loc
-                                                        && t.num === s.num
-                                                        && t.event === s.event
-                                                        && t.val === s.val) === index);
-              }
-
-              if (n != samples.length) {
-                console.log("deduped:",n-samples.length);
-              }
-
-              // Now we will trim off samples if we are live...
-              if (intervalID) {
-                var last_ms = samples[samples.length-1].ms
-                samples = samples.filter((s, index, self) =>
-                                         s.ms >= (last_ms - DESIRED_DURATION_S*1000));
-              }
-//              console.log(samples);
-              if (samples.length > 0)
-                process(samples);
-              console.log("END",LAST_SAMPLE_DATE);
-            }
+            processNewSamples(cur_sam);
           },
           error: function(xhr, ajaxOptions, thrownError) {
 	    console.log("Error!" + xhr.status);
