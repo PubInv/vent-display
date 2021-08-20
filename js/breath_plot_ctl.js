@@ -69,6 +69,7 @@ const VENTMON_DATA_LAKE = "http://ventmon.coslabs.com";
 const queryString = window.location.search;
 const urlParams = new URLSearchParams(queryString);
 var TRACE_ID = urlParams.get('i')
+var FILE_NAME_OVERRIDE = urlParams.get('o')
 // This was problematic when the data server was in a different place...
 // var DSERVER_URL = window.location.protocol + "//" + window.location.host;
 var DSERVER_URL = "";
@@ -855,7 +856,25 @@ function retrieveAndPlot(){
     }
   }
   console.log("url =",decodeURI(url));
-  $.ajax({url: url,
+
+  // WARNING! If the FILE_NAME_OVERRIDE is specified,
+  // then it is unclear if we should use the logic here.
+  if (FILE_NAME_OVERRIDE) {
+    console.log("FILENAME OVERRIDE");
+    console.log(DSERVER_URL + "data/" + FILE_NAME_OVERRIDE);
+    $.ajax({url: DSERVER_URL +"data/" + FILE_NAME_OVERRIDE,
+          success: function(ra){
+            console.dir(ra);
+            var converted = respiraworks_to_PIRDS(ra)
+            console.dir(ra);
+          },
+          error: function(xhr, ajaxOptions, thrownError) {
+	    console.log("FILE_NAME Error!" + xhr.status);
+	    console.log(thrownError);
+          }
+           });
+  } else {
+    $.ajax({url: url,
           success: function(cur_sam){
 
             // WARNING: This is a hack...if the timestamp is negative,
@@ -940,6 +959,7 @@ function retrieveAndPlot(){
             $("#livetoggle").prop("checked",false);
           }
          });
+  }
 }
 
 
