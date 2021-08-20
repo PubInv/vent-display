@@ -49,7 +49,7 @@ an interactive or static analysis of a respiration. It&#39;s primary purpose is 
         </p>
       </div>
 
-      <div class="input-group mb-3">
+      <div class="input-group mb-3 livecon">
         <div class="input-group-prepend">
           <span class="input-group-text" id="basic-addon3">PIRDS data server url:</span>
         </div>
@@ -60,30 +60,37 @@ an interactive or static analysis of a respiration. It&#39;s primary purpose is 
         </div>
       </div>
 
-      <div class="input-group mb-3">
+      <div class="input-group mb-3 livecon">
         <div class="input-group-prepend">
           <span class="input-group-text" id="basic-addon3">Trace ID:</span>
         </div>
         <input type="text" class="form-control" id="traceid" aria-describedby="basic-addon3">
       </div>
 
-      <div class="input-group mb-3">
+      <div class="input-group mb-3 livecon">
         <div class="input-group-prepend">
           <span class="input-group-text" for="samples_to_plot">Number of Samples (~10s per 15000 samples):</span>
         </div>
         <input type="text" class="form-control" id="samples_to_plot" aria-describedby="samples_to_plot">
       </div>
 
+      <div class="input-group mb-3 raworks">
+        <div class="input-group-prepend">
+          <span class="input-group-text" id="basic-addon3">Respiraworks file url:</span>
+        </div>
+        <input type="text" class="form-control" id="raworksid" aria-describedby="basic-addon3">
+      </div>
+
       </div>
       <div>
 
-<label for="livetoggle">Plot Live</label>
-<label class="switch">
+<label for="livetoggle  livecon">Plot Live</label>
+<label class="switch  livecon">
   <input type="checkbox" id="livetoggle" checked>
   <span class="slider round"></span>
 </label>
 
-<div class="btn-group" role="group" aria-label="Basic example">
+<div class="btn-group  livecon" role="group" aria-label="Basic example">
         <button type="button" class="btn btn-primary" id="5s_btn">5s</button>
         <button type="button" class="btn btn-primary" id="10s_btn">10s</button>
         <button type="button" class="btn btn-primary" id="15s_btn">15s</button>

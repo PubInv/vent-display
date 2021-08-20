@@ -79,6 +79,5 @@ function respiraworks_to_PIRDS(ra_text) {
     samples.push(psample);
     samples.push(fsample);
   }
-  console.dir(samples);
   return samples;
 }

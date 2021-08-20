@@ -68,8 +68,24 @@ const SAMPLES_BETWEEN_FIO2_REPORTS = 30000;
 const VENTMON_DATA_LAKE = "http://ventmon.coslabs.com";
 const queryString = window.location.search;
 const urlParams = new URLSearchParams(queryString);
-var TRACE_ID = urlParams.get('i')
-var FILE_NAME_OVERRIDE = urlParams.get('o')
+var TRACE_ID = urlParams.get('i');
+
+// If the query params includes "raworks" (for Respiraworks),
+// then we will behave somewhat differently.
+// We will not do live processing, and will will hide
+// the live url boxes, and place the url for the respiraworks file
+// in a separate box.
+var RESPIRAWORKS_OVERRIDE = urlParams.get('raworks');
+var RESPIAWORKS_URL;
+if (RESPIRAWORKS_OVERRIDE) {
+  $("#livetoggle").prop("checked",false);
+  $(".livecon").hide();
+  RESPIRAWORKS_URL = RESPIRAWORKS_OVERRIDE;
+  console.log(DSERVER_URL + "data/" + RESPIRAWORKS_OVERRIDE);
+  $("#raworksid").val(RESPIRAWORKS_URL);
+} else {
+  $(".raworks").hide();
+}
 // This was problematic when the data server was in a different place...
 // var DSERVER_URL = window.location.protocol + "//" + window.location.host;
 var DSERVER_URL = "";
@@ -937,16 +953,14 @@ function retrieveAndPlot(){
   }
   console.log("url =",decodeURI(url));
 
-  // WARNING! If the FILE_NAME_OVERRIDE is specified,
+  // WARNING! If the RESPIRAWORKS_OVERRIDE is specified,
   // then it is unclear if we should use the logic here.
-  if (FILE_NAME_OVERRIDE) {
+  if (RESPIRAWORKS_OVERRIDE) {
     console.log("FILENAME OVERRIDE");
-    console.log(DSERVER_URL + "data/" + FILE_NAME_OVERRIDE);
-    $.ajax({url: DSERVER_URL +"data/" + FILE_NAME_OVERRIDE,
+    console.log(RESPIRAWORKS_URL);
+    $.ajax({url: RESPIRAWORKS_URL,
           success: function(ra){
-            console.dir(ra);
             var converted = respiraworks_to_PIRDS(ra);
-            console.dir(converted);
             processNewSamples(converted);
           },
           error: function(xhr, ajaxOptions, thrownError) {
@@ -1143,6 +1157,14 @@ $( document ).ready(function() {
     DSERVER_URL = $("#dserverurl").val();
     start_interval_timer();
   });
+
+  // This is RespiraWorks specific:
+    $('#raworksid').change(function () {
+      samples = [];
+      RESPIRAWORKS_URL = $("#raworksid").val();
+      retrieveAndPlot();
+  });
+
 
   $( "#traceid" ).val( TRACE_ID );
   $('#traceid').change(function () {
