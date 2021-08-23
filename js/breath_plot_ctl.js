@@ -966,6 +966,8 @@ function retrieveAndPlot(){
           error: function(xhr, ajaxOptions, thrownError) {
 	    console.log("FILE_NAME Error!" + xhr.status);
 	    console.log(thrownError);
+            stop_interval_timer();
+            $("#livetoggle").prop("checked",false);
           }
            });
   } else {

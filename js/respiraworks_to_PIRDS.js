@@ -45,7 +45,7 @@ function get_trace(name,traces) {
 }
 
 function respiraworks_to_PIRDS(ra_text) {
-  var ra = JSON.parse(ra_text);
+  var ra = (typeof val === 'string') ? JSON.parse(ra_text) : ra_text;
   GLOBAL_DATASET = ra;
   var converted = ra.scenario.trace_variable_names;
   var traces = ra.traces;
