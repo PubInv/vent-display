@@ -924,7 +924,12 @@ function retrieveAndPlot(){
 
   var TREAT_LIVE_AND_OVERRIDE_TIME = true;
   if (TREAT_LIVE_AND_OVERRIDE_TIME || (MAX_REFRESH || samples.length == 0) || !LAST_SAMPLE_DATE) {
-    url =  DSERVER_URL + "/rds" + trace_piece + "/json?n="+ MAX_SAMPLES_TO_STORE_S;
+
+    if ($("#simulation").is(":checked")) {
+        url =  DSERVER_URL + trace_piece + "/"+ MAX_SAMPLES_TO_STORE_S;
+    } else {
+      url =  DSERVER_URL + "/rds" + trace_piece + "/json?n="+ MAX_SAMPLES_TO_STORE_S;
+    }
   } else {
     url = DSERVER_URL + "/rds" +  trace_piece + "/json?n="+  NUM_TO_READ +
       "&t=" + encodeURIComponent(LAST_SAMPLE_DATE.toUTCString());
@@ -942,6 +947,7 @@ function retrieveAndPlot(){
       var tm = t - DESIRED_DURATION_S*1000;
       var t_max = Math.max(tm,LAST_SAMPLE_DATE.getTime());
       var date_minus_duration = new Date(t_max);
+
       url = DSERVER_URL +"/rds"+ trace_piece + "/json?n="+  NUM_TO_READ +
         "&a=" + encodeURIComponent(date_minus_duration.toUTCString()) +
         "&z=" + encodeURIComponent(currentDate.toUTCString());
@@ -1082,12 +1088,22 @@ $("#stopoperation").click(stop_interval_timer);
           // or Arduino. This really needs to be addressed in
           // our Node Server, AND also made more robust in VentOS.
           await sleep(500);
+          var url;
+          var GET_OR_POST;
+          if ($("#simulation").is(":checked")) {
+            // Note the slash at the end is needed
+            url =  DSERVER_URL + "/control/";
+            GET_OR_POST = 'POST';
+          } else {
+            url = 'http://localhost:5000/api/pircs/'
+            GET_OR_POST = 'GET';
+          }
           $.ajax({
             //url: lh+"/api/pircs?com=C&par="+parName+"&int="+interp+"&mod="+modifier+"&val="+val,
-            type: 'GET',
-            url: 'http://localhost:5000/api/pircs/',
+            type: GET_OR_POST,
+            url: url,
             dataType: 'json',
-            data: { com: "C", par: k, int: "T", mod: "A", val: dict[k] }
+            data: { com: "C", par: k, int: "T", mod: 0, val: dict[k] }
           }).done(function(result) {
             console.log("result: " + JSON.stringify(result));
           }).fail(function(xhr, ajaxOptions, thrownError) {
