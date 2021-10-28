@@ -20,6 +20,13 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+
+var MAX_SAMPLES_TO_STORE_S = 2000;
+
+const SMALL_HEIGHT = 500;
+const LARGE_HEIGHT = 800;
+
+
 // I want a function to print times without milliseconds!!!!
 
 if (!Date.prototype.toISOStringSeconds) {
@@ -100,10 +107,11 @@ var intervalID = null;
 
 // This sould be better as time, but is easier
 // to do as number of samples.
-var MAX_SAMPLES_TO_STORE_S = 2000;
-var MAX_REFRESH = false;
-var samples = [];
-var INITS_ONLY = true;
+// var MAX_SAMPLES_TO_STORE_S = 2000;
+// var MAX_REFRESH = false;
+// var INITS_ONLY = true;
+
+var SAMPLES = [];
 
 // This is just to get the party started!
 function init_samples() {
@@ -175,41 +183,41 @@ function init_samples() {
     ];
 }
 
+function get_pressure_and_flow_data_from_samples(samples) {
 
+  var millis = unpack(samples, 'ms');
+  var min = Math.min(...millis);
+  var max = Math.max(...millis);
+  var total_seconds = (max-min)/1000.0;
+ var maxseconds = Math.ceil(total_seconds);
 
-function unpack(rows, key) {
-    return rows.map(function(row) { return row[key]; });
-}
+  var flows = samples.filter(s => s.event == 'M' && s.type == 'F');
 
-// const CONVERT_PIRDS_TO_SLM = 1/1000;
-
-// we have now changed this, there will be flow and
-// pressure in the same samples, and we should filter.
-// TODO: I need to add maximal start and end
-// samples to equalize all the plots.
-function samplesToLine(samples) {
-    var flows = samples.filter(s => s.event == 'M' && s.type == 'F');
-
-    // These are slm/1000, or ml/minute...
-    // so we multiply by 1000 to get liters per minute
-    var flow_values = unpack(flows,"val").map(v => v * CONVERT_PIRDS_TO_SLM);
-    var fmillis = unpack(flows, 'ms');
-    // Convert to seconds...
-    var fmin = Math.min(...fmillis);
-    var fzeroed = fmillis.map(m =>(m-fmin)/1000.0);
+  // These are slm/1000, or ml/minute...
+  // so we multiply by 1000 to get liters per minute
+  var flow_values = unpack(flows,"val").map(v => v * CONVERT_PIRDS_TO_SLM);
+  var fmillis = unpack(flows, 'ms');
+  // Convert to seconds...
+  var fmin = Math.min(...fmillis);
+  var fzeroed = fmillis.map(m =>(m-fmin)/1000.0);
 
   var pressures = samples.filter(s => s.event == 'M' && s.type == 'D' && (s.loc == 'A' || s.loc == 'I'));
 
-    var pmillis = unpack(pressures, 'ms');
-    var pmin = Math.min(...pmillis);
-    var pzeroed = pmillis.map(m =>(m-pmin)/1000.0);
-    // the PIRDS standard is integral mm H2O, so we divide by 10
-    var delta_p = unpack(pressures, 'val').map(p => p / 10);
-    var diff_p = {type: "scatter", mode: "lines",
+  var pmillis = unpack(pressures, 'ms');
+  var pmin = Math.min(...pmillis);
+  var pzeroed = pmillis.map(m =>(m-pmin)/1000.0);
+
+  // the PIRDS standard is integral mm H2O, so we divide by 10
+  var delta_p = unpack(pressures, 'val').map(p => p / 10);
+  return [maxseconds,pzeroed,delta_p,fzeroed,flow_values];
+
+}
+function get_pressure_and_flow_graphs_clinical(pzeroed,delta_p,fzeroed,flow_values) {
+      var diff_p = {type: "scatter", mode: "lines",
 		  name: "pressure",
 		  x: pzeroed,
 		  y: delta_p,
-		  line: {color: "#FF0000"}
+		  line: {color: "#00FF00"}
 		 };
 
   var flow = {type: "scatter", mode: "lines",
@@ -219,27 +227,76 @@ function samplesToLine(samples) {
               xaxis: 'x2',
               yaxis: 'y2',
               fill: 'tozeroy',
-		line: {color: '#0000FF'}
+		line: {color: '#FFFF00'}
              };
-
-  var max_flow = flow_values.reduce(
-    function(a, b) {
-      return Math.max(Math.abs(a), Math.abs(b));
-    }
-    ,0);
-  var scaled_flow = flow_values.map(f => 100.0 * (f / max_flow));
-  var flow_hollow = {type: "scatter", mode: "lines",
-		name: "flow ghost",
-		     x: fzeroed,
-                     // Convert to a percentage
-	             y: scaled_flow,
-                     xaxis: 'x3',
-                     yaxis: 'y3',
-		line: {color: '#8888FF'}
-               };
-  return [diff_p,flow,flow_hollow];
+  return [diff_p,flow];
 }
-function plot(samples, trans, breaths) {
+
+function plot_clinical(samples,transistions,breaths) {
+
+  const [max_seconds,pzeroed,delta_p,fzeroed,flow_values] = get_pressure_and_flow_data_from_samples(samples);
+
+  const pressure_and_flow = get_pressure_and_flow_graphs_clinical(pzeroed,delta_p,fzeroed,flow_values);
+      var layout = {
+//      title: SEVENINCHEL14TS ? '' : 'VentMon Breath Analysis',
+      height: SEVENINCHEL14TS ? SMALL_HEIGHT : LARGE_HEIGHT,
+      // Here I attempt to match Paulino's style
+      plot_bgcolor: "#000",
+      paper_bgcolor : "#000",
+      showlegend: false,
+
+      xaxis: {domain: [0.0,1.0],
+              range : [0,max_seconds],
+              tickfont: {color: 'green'}},
+      yaxis: {
+        title: 'P(cm H2O)',
+        titlefont: {color: 'green'},
+        tickfont: {color: 'green'},
+      },
+      xaxis2: {domain: [0.0,1.0],
+               range : [0,max_seconds],
+               tickfont: {color: 'yellow'}},
+      yaxis2: {
+        title: 'l/min',
+        titlefont: {color: 'yellow'},
+        tickfont: {color: 'yellow'}
+      },
+      grid: {
+        rows: 2,
+        columns: 1,
+        pattern: 'independent',
+        roworder: 'top to bottom'}
+    }
+  Plotly.newPlot('PFGraph',
+                 pressure_and_flow,
+                 layout,
+                 {displayModeBar: false,
+                  displaylogo: false,
+                  responsive: true});
+
+}
+function render_samples_clinical(samples) {
+  var [max_seconds,pzeroed,delta_p,fzeroed,flow_values] = get_pressure_and_flow_data_from_samples(samples);
+
+  var pressure_and_flow = get_pressure_and_flow_graphs_clinical(pzeroed,delta_p,fzeroed,flow_values);
+
+  const t = 200; // size of the window is 200ms
+  const v = 50; // min volume in ml
+  var [transitions,breaths] = computeMovingWindowTrace(samples,t,v);
+  SAMPLES = samples;
+
+  plot_clinical(samples,transitions,breaths);
+  compute_and_render_observations(samples,transitions,breaths);
+}
+
+
+// function unpack(rows, key) {
+//     return rows.map(function(row) { return row[key]; });
+// }
+
+// const CONVERT_PIRDS_TO_SLM = 1/1000;
+
+function plot_engineering(samples, trans, breaths) {
   var new_data = samplesToLine(samples);
   var millis = unpack(samples, 'ms');
   var min = Math.min(...millis);
@@ -517,8 +574,6 @@ function plot(samples, trans, breaths) {
        event_graph.push(o);
      }
 
-  const SMALL_HEIGHT = 500;
-  const LARGE_HEIGHT = 800;
 
     // I'm going to try putting the pressure
     // in faintly to make the graphs match
@@ -581,7 +636,7 @@ function plot(samples, trans, breaths) {
 //  event_graph.push(test);
   var triple_plot = [new_data[0],new_data[1],...event_graph];
 
-    Plotly.newPlot('PFGraph',
+   Plotly.newPlot('PFGraph',
                    triple_plot,
                    layout,
                    {displayModeBar: false,
@@ -691,12 +746,7 @@ function get_date_of_sample_simple(epoch_ms) {
   return d;
 }
 
-
-function process(samples) {
-  const t = 200; // size of the window is 200ms
-  const v = 50; // min volume in ml
-  var [transitions,breaths] = computeMovingWindowTrace(samples,t,v);
-  plot(samples,transitions,breaths);
+function compute_and_render_observations(samples,transitions,breaths) {
   // How many seconds backwards should we look? Perhaps 20?
   var [bpm,tv,mv,EIratio,wob] = compute_respiration_rate(RESPIRATION_RATE_WINDOW_SECONDS,samples,transitions,breaths);
 
@@ -807,35 +857,25 @@ function process(samples) {
   $("#time_start").text((start) ? start.toISOStringSeconds() : null);
   $("#time_finish").text((finish) ? finish.toISOStringSeconds() : null);
   LAST_SAMPLE_DATE = finish;
+}
+
+// TODO: In this case, we are not using pressure_and_flow,
+// which IS used by the clinical plot. This is a major disruption.
+function render_samples_engineering(samples) {
+  if (!samples) return;
+  SAMPLES = samples;
+  const t = 200; // size of the window is 200ms
+  const v = 50; // min volume in ml
+  var [transitions,breaths] = computeMovingWindowTrace(samples,t,v);
+  plot_engineering(samples,transitions,breaths);
+
+  compute_and_render_observations(samples,transitions,breaths);
 //  console.log("process",start);
 //  console.log("process",finish);
 }
 
-// WARNING: This is a hack...if the timestamp is negative,
-// we treat it as a limited (beyond range of sensor) measurement.
-// Our goal is to warn about this, but for now we will just
-// ignore and correct.
-function sanitize_samples(samples) {
-  samples.forEach(s =>
-                  {
-                    if (s.event == "M") {
-                      if ("string" == (typeof s.ms))
-                        s.ms = parseInt(s.ms);
-                      if ("string" == (typeof s.val))
-                        s.val = parseInt(s.val);
-                      if ("string" == (typeof s.num))
-                        s.num = parseInt(s.num);
-                      if (s.ms < 0) {
-                        s.ms = -s.ms;
-                      } else if (s.event == "E") {
-                      }
-                    }
-
-                  });
-  return samples;
-}
-
-function processNewSamples(cur_sam) {
+// make this take maxesonds and pressure and flow
+function processSamplesAndDates(cur_sam) {
   // WARNING: This is a hack...if the timestamp is negative,
   // we treat it as a limited (beyond range of sensor) measurement.
   // Our goal is to warn about this, but for now we will just
@@ -857,46 +897,15 @@ function processNewSamples(cur_sam) {
       $("#livetoggle").prop("checked",false);
       console.log(cur_sam);
     } else {
-      cur_sam = sanitize_samples(cur_sam);
+//      cur_sam = sanitize_samples(cur_sam);
       if (INITS_ONLY) {
 	samples = cur_sam;
 	INITS_ONLY = false;
       } else {
+        samples = add_samples(samples,cur_sam);
         console.log("cursuam: a,z : ",cur_sam[0].ms,cur_sam[cur_sam.length-1].ms);
-
         var first_new_ms = cur_sam[0].ms;
-        //                  var cur_first_ms = samples[0].ms;
-        // THIS IS WRONG
-        // if (first_new_ms < cur_first_ms) { // This means a reset of the Arduino, we will dump samples..
-        //   samples = [];
-        //   console.log("DETECTED ARDUINO RESET, DUMPING CURRENT SAMPLES");
-        // }
-        var discard = Math.max(0,
-                               samples.length + cur_sam.length - MAX_SAMPLES_TO_STORE_S);
-	samples = samples.slice(discard);
       }
-
-      // This is leading to an inconsistency!!
-      samples = samples.concat(cur_sam);
-      samples.sort((a,b) => a.ms < b.ms);
-      // We are not guaranteeed to get samples in order
-      // we sort them....
-      // We also need to de-dup them.
-      // This would be more efficient if done after sorting..
-      var n = samples.length;
-
-      // I think this is de-dupeing code...
-      samples = samples.filter((s, index, self) =>
-        self.findIndex(t => t.ms === s.ms
-                       && t.type === s.type
-                       && t.loc === s.loc
-                       && t.num === s.num
-                       && t.event === s.event
-                       && t.val === s.val) === index);
-    }
-
-    if (n != samples.length) {
-      console.log("deduped:",n-samples.length);
     }
 
     // Now we will trim off samples if we are live...
@@ -907,11 +916,86 @@ function processNewSamples(cur_sam) {
     }
     //              console.log(samples);
     if (samples.length > 0)
-      process(samples);
+      render_samples_engineering(samples);
     console.log("END",LAST_SAMPLE_DATE);
   }
 }
 
+
+// we have now changed this, there will be flow and
+// pressure in the same samples, and we should filter.
+// TODO: I need to add maximal start and end
+// samples to equalize all the plots.
+function samplesToLine(samples) {
+    var flows = samples.filter(s => s.event == 'M' && s.type == 'F');
+
+    // These are slm/1000, or ml/minute...
+    // so we multiply by 1000 to get liters per minute
+    var flow_values = unpack(flows,"val").map(v => v * CONVERT_PIRDS_TO_SLM);
+    var fmillis = unpack(flows, 'ms');
+    // Convert to seconds...
+    var fmin = Math.min(...fmillis);
+    var fzeroed = fmillis.map(m =>(m-fmin)/1000.0);
+
+  var pressures = samples.filter(s => s.event == 'M' && s.type == 'D' && (s.loc == 'A' || s.loc == 'I'));
+
+    var pmillis = unpack(pressures, 'ms');
+    var pmin = Math.min(...pmillis);
+    var pzeroed = pmillis.map(m =>(m-pmin)/1000.0);
+    // the PIRDS standard is integral mm H2O, so we divide by 10
+    var delta_p = unpack(pressures, 'val').map(p => p / 10);
+    var diff_p = {type: "scatter", mode: "lines",
+		  name: "pressure",
+		  x: pzeroed,
+		  y: delta_p,
+		  line: {color: "#00FF00"}
+		 };
+
+  var flow = {type: "scatter", mode: "lines",
+		name: "flow",
+		x: fzeroed,
+	      y: flow_values,
+              xaxis: 'x2',
+              yaxis: 'y2',
+              fill: 'tozeroy',
+		line: {color: '#FFFF00'}
+             };
+
+  var max_flow = flow_values.reduce(
+    function(a, b) {
+      return Math.max(Math.abs(a), Math.abs(b));
+    }
+    ,0);
+  var scaled_flow = flow_values.map(f => 100.0 * (f / max_flow));
+  var flow_hollow = {type: "scatter", mode: "lines",
+		name: "flow ghost",
+		     x: fzeroed,
+                     // Convert to a percentage
+	             y: scaled_flow,
+                     xaxis: 'x3',
+                     yaxis: 'y3',
+		line: {color: '#8888FF'}
+               };
+  return [diff_p,flow,flow_hollow];
+}
+
+
+function processNewSamples(samples) {
+  var new_data = samplesToLine(samples);
+  var millis = unpack(samples, 'ms');
+  var min = Math.min(...millis);
+  var zeroed = millis.map(m =>(m-min)/1000.0);
+  var max = Math.max(...millis);
+  var total_seconds = (max-min)/1000.0;
+  var pressure_and_flow = [new_data[0],new_data[1]];
+
+  var maxseconds = Math.ceil(total_seconds);
+
+  return [maxseconds,samples,pressure_and_flow];
+}
+
+
+var REQUEST_FINAL_SAMPLE;
 
 // TODO: This is bad when it fires another request while a request is in play.
 function retrieveAndPlot(){
@@ -940,7 +1024,6 @@ function retrieveAndPlot(){
   // if we are live and we have samples,
   // we always set z= to the last sample.
   if (!TREAT_LIVE_AND_OVERRIDE_TIME) {
-    var REQUEST_FINAL_SAMPLE;
     if (intervalID  && LAST_SAMPLE_DATE) {
       var currentDate = new Date();
       var t = currentDate.getTime();
@@ -957,7 +1040,6 @@ function retrieveAndPlot(){
     } else {
     }
   }
-  console.log("url =",decodeURI(url));
 
   // WARNING! If the RESPIRAWORKS_OVERRIDE is specified,
   // then it is unclear if we should use the logic here.
@@ -967,7 +1049,7 @@ function retrieveAndPlot(){
     $.ajax({url: RESPIRAWORKS_URL,
           success: function(ra){
             var converted = respiraworks_to_PIRDS(ra);
-            processNewSamples(converted);
+            processSamplesAndDates(converted);
           },
           error: function(xhr, ajaxOptions, thrownError) {
 	    console.log("FILE_NAME Error!" + xhr.status);
@@ -977,17 +1059,31 @@ function retrieveAndPlot(){
           }
            });
   } else {
-    $.ajax({url: url,
-          success: function(cur_sam){
-            processNewSamples(cur_sam);
-          },
-          error: function(xhr, ajaxOptions, thrownError) {
-	    console.log("Error!" + xhr.status);
-	    console.log(thrownError);
-            stop_interval_timer();
-            $("#livetoggle").prop("checked",false);
-          }
-         });
+    if ($("#simulation").is(":checked")) {
+      if ($("#clinical_display").is(":checked")) {
+        getPIRDSData(DSERVER_URL,render_samples_clinical,stop_interval_timer);
+      } else {
+        getPIRDSData(DSERVER_URL,render_samples_engineering,stop_interval_timer);
+      }
+    } else {
+      $.ajax({url: url,
+              success: function(cur_sam){
+                var tsamples = add_samples(SAMPLES,cur_sam);
+                if ($("#clinical_display").is(":checked")) {
+                  render_samples_clinical(tsamples);
+                } else {
+                  render_samples_engineering(tsamples);
+                }
+
+              },
+              error: function(xhr, ajaxOptions, thrownError) {
+	        console.log("Error!" + xhr.status);
+	        console.log(thrownError);
+                stop_interval_timer();
+                $("#livetoggle").prop("checked",false);
+              }
+             });
+    }
   }
 }
 
@@ -1200,7 +1296,12 @@ $( document ).ready(function() {
   });
 
   samples = init_samples();
-  process(samples);
+
+  if ($("#clinical_display").is(":checked")) {
+    render_samples_clinical(samples);
+  } else {
+    render_samples_engineering(samples);
+  }
   start_interval_timer();
 
   load_ui_with_defaults(LIMITS);
@@ -1229,5 +1330,6 @@ $( document ).ready(function() {
 });
 
 $("#livetoggle").prop("checked",true);
+$("#clinical_display").prop("checked",false);
 
 console.dir("SEVENINCHEL14TS",SEVENINCHEL14TS);

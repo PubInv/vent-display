@@ -20,7 +20,7 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#!/usr/bin/env node
+// #!/usr/bin/env node
 var argv = require('yargs/yargs')(process.argv.slice(2))
     .usage('Usage: $0 -sport [string, seraiport name] -uport [num,reporting port] -uaddress [string, like "127.0.0.1" or "ventmon.coslabs.com"]\nTo do no UDP reporting, leave off uport and uaddress.\nStandard uport is 6111, standard UDP is "ventmon.coslabs.com" or "127.0.0.1"')
     .default('sport', "COM4")
