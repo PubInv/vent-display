@@ -26,6 +26,21 @@ var MAX_SAMPLES_TO_STORE_S = 2000;
 const SMALL_HEIGHT = 500;
 const LARGE_HEIGHT = 800;
 
+CLINICAL_COLORS = {
+  bg: "black",
+  sidebar_bg: "black",
+  pressure: "green",
+  flow: "yellow",
+  text_color: "yellow",
+}
+ENGINEERING_COLORS = {
+  bg: "white",
+  sidebar_bg: "AliceBlue",
+  pressure: "red",
+  flow: "blue",
+  text_color: "black",
+}
+
 
 // I want a function to print times without milliseconds!!!!
 
@@ -212,12 +227,13 @@ function get_pressure_and_flow_data_from_samples(samples) {
   return [maxseconds,pzeroed,delta_p,fzeroed,flow_values];
 
 }
-function get_pressure_and_flow_graphs_clinical(pzeroed,delta_p,fzeroed,flow_values) {
+function get_pressure_and_flow_graphs_clinical(pzeroed,delta_p,fzeroed,flow_values,colors) {
+
       var diff_p = {type: "scatter", mode: "lines",
 		  name: "pressure",
 		  x: pzeroed,
 		  y: delta_p,
-		  line: {color: "#00FF00"}
+		  line: {color: colors.pressure}
 		 };
 
   var flow = {type: "scatter", mode: "lines",
@@ -227,7 +243,7 @@ function get_pressure_and_flow_graphs_clinical(pzeroed,delta_p,fzeroed,flow_valu
               xaxis: 'x2',
               yaxis: 'y2',
               fill: 'tozeroy',
-		line: {color: '#FFFF00'}
+		line: {color: colors.flow}
              };
   return [diff_p,flow];
 }
@@ -236,30 +252,30 @@ function plot_clinical(samples,transistions,breaths) {
 
   const [max_seconds,pzeroed,delta_p,fzeroed,flow_values] = get_pressure_and_flow_data_from_samples(samples);
 
-  const pressure_and_flow = get_pressure_and_flow_graphs_clinical(pzeroed,delta_p,fzeroed,flow_values);
+  const pressure_and_flow = get_pressure_and_flow_graphs_clinical(pzeroed,delta_p,fzeroed,flow_values,CLINICAL_COLORS);
       var layout = {
 //      title: SEVENINCHEL14TS ? '' : 'VentMon Breath Analysis',
       height: SEVENINCHEL14TS ? SMALL_HEIGHT : LARGE_HEIGHT,
       // Here I attempt to match Paulino's style
-      plot_bgcolor: "#000",
-      paper_bgcolor : "#000",
+      plot_bgcolor: CLINICAL_COLORS.bg,
+      paper_bgcolor : CLINICAL_COLORS.bg,
       showlegend: false,
 
       xaxis: {domain: [0.0,1.0],
               range : [0,max_seconds],
-              tickfont: {color: 'green'}},
+              tickfont: {color: CLINICAL_COLORS.pressure}},
       yaxis: {
         title: 'P(cm H2O)',
-        titlefont: {color: 'green'},
-        tickfont: {color: 'green'},
+        titlefont: {color: CLINICAL_COLORS.pressure},
+        tickfont: {color: CLINICAL_COLORS.pressure},
       },
       xaxis2: {domain: [0.0,1.0],
                range : [0,max_seconds],
-               tickfont: {color: 'yellow'}},
+               tickfont: {color: CLINICAL_COLORS.flow}},
       yaxis2: {
         title: 'l/min',
-        titlefont: {color: 'yellow'},
-        tickfont: {color: 'yellow'}
+        titlefont: {color: CLINICAL_COLORS.flow},
+        tickfont: {color: CLINICAL_COLORS.flow}
       },
       grid: {
         rows: 2,
@@ -278,7 +294,7 @@ function plot_clinical(samples,transistions,breaths) {
 function render_samples_clinical(samples) {
   var [max_seconds,pzeroed,delta_p,fzeroed,flow_values] = get_pressure_and_flow_data_from_samples(samples);
 
-  var pressure_and_flow = get_pressure_and_flow_graphs_clinical(pzeroed,delta_p,fzeroed,flow_values);
+  var pressure_and_flow = get_pressure_and_flow_graphs_clinical(pzeroed,delta_p,fzeroed,flow_values,CLINICAL_COLORS);
 
   const t = 200; // size of the window is 200ms
   const v = 50; // min volume in ml
@@ -297,16 +313,13 @@ function render_samples_clinical(samples) {
 // const CONVERT_PIRDS_TO_SLM = 1/1000;
 
 function plot_engineering(samples, trans, breaths) {
-  var new_data = samplesToLine(samples);
+  var new_data = samplesToLine(samples,ENGINEERING_COLORS);
   var millis = unpack(samples, 'ms');
   var min = Math.min(...millis);
   var zeroed = millis.map(m =>(m-min)/1000.0);
   var max = Math.max(...millis);
   var total_seconds = (max-min)/1000.0;
 
-
-
-//  }
 
   // The Y-axis for the events will be percentage.
   // This is somewhat abstract; each trace has
@@ -926,7 +939,7 @@ function processSamplesAndDates(cur_sam) {
 // pressure in the same samples, and we should filter.
 // TODO: I need to add maximal start and end
 // samples to equalize all the plots.
-function samplesToLine(samples) {
+function samplesToLine(samples,colors) {
     var flows = samples.filter(s => s.event == 'M' && s.type == 'F');
 
     // These are slm/1000, or ml/minute...
@@ -948,7 +961,7 @@ function samplesToLine(samples) {
 		  name: "pressure",
 		  x: pzeroed,
 		  y: delta_p,
-		  line: {color: "#00FF00"}
+		  line: {color: colors.pressure}
 		 };
 
   var flow = {type: "scatter", mode: "lines",
@@ -958,7 +971,7 @@ function samplesToLine(samples) {
               xaxis: 'x2',
               yaxis: 'y2',
               fill: 'tozeroy',
-		line: {color: '#FFFF00'}
+		line: {color: colors.flow}
              };
 
   var max_flow = flow_values.reduce(
@@ -980,19 +993,19 @@ function samplesToLine(samples) {
 }
 
 
-function processNewSamples(samples) {
-  var new_data = samplesToLine(samples);
-  var millis = unpack(samples, 'ms');
-  var min = Math.min(...millis);
-  var zeroed = millis.map(m =>(m-min)/1000.0);
-  var max = Math.max(...millis);
-  var total_seconds = (max-min)/1000.0;
-  var pressure_and_flow = [new_data[0],new_data[1]];
+// function processNewSamples(samples) {
+//   var new_data = samplesToLine(samples,colors);
+//   var millis = unpack(samples, 'ms');
+//   var min = Math.min(...millis);
+//   var zeroed = millis.map(m =>(m-min)/1000.0);
+//   var max = Math.max(...millis);
+//   var total_seconds = (max-min)/1000.0;
+//   var pressure_and_flow = [new_data[0],new_data[1]];
 
-  var maxseconds = Math.ceil(total_seconds);
+//   var maxseconds = Math.ceil(total_seconds);
 
-  return [maxseconds,samples,pressure_and_flow];
-}
+//   return [maxseconds,samples,pressure_and_flow];
+// }
 
 
 var REQUEST_FINAL_SAMPLE;
@@ -1329,7 +1342,22 @@ $( document ).ready(function() {
 
 });
 
+
+function change_clinical() {
+  if ($("#clinical_display").is(":checked")) {
+    $(".engineering_only").hide();
+    $("#calcarea").css('background',CLINICAL_COLORS.sidebar_bg);
+    $("#calcarea *").css('background',CLINICAL_COLORS.sidebar_bg);
+    $("#calcarea *").css('color',CLINICAL_COLORS.text_color);
+  } else {
+    $(".engineering_only").show();
+    $("#calcarea").css('background',ENGINEERING_COLORS.sidebar_bg);
+    $("#calcarea *").css('background',ENGINEERING_COLORS.sidebar_bg);
+    $("#calcarea *").css('color',ENGINEERING_COLORS.text_color);
+  }
+}
 $("#livetoggle").prop("checked",true);
 $("#clinical_display").prop("checked",false);
+$("#clinical_display").change(change_clinical);
 
 console.dir("SEVENINCHEL14TS",SEVENINCHEL14TS);
