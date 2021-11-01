@@ -37,9 +37,62 @@ Breath Plot: COVID-19 Respiration Analysis Software
   </head>
 
   <body>
+    <template id="observable-xx">
+      <style>
+.calcnum {
+    color: blue;
+    font-size: xx-large;
+}
+.fence {
+width: 3em;
+}
+.value_and_fences {
+  display: flex;
+flex-direction: row;
+justify-content: space-between;
+}
+.limit {
+  display: flex;
+  flex-direction: row;
+}
+.limit  label {
+   width: 1em;
+}
 
+  .alarmred {
+    background: red;
+  }
+        </style>
+      <div class="observable">
+        <label for="obs">
+          <slot name="obs-title">OBS-TITLE NEEDED</slot>
+        </label>
+        <div class="value_and_fences">
+          <div class="calcnum">
+            <label id="obs">
+          <slot name="obs-value">OBS-VALUE NEEDED</slot>
+            </label>
+          </div>
+          <div class="vertical_alarms">
+            <div class="limit max">
+              <label for="max_h">H:</label>
+              <input class="fence" id="max_h" type='text'>
+              <slot name="obs-max">111</slot>
+</input>
+            </div>
+            <div class="limit min">
+              <label for="max_l">L:</label>
+              <input class="fence" id="max_l" type='text'>
+              <slot name="obs-min">222</slot>
+</input>
+            </div>
+          </div>
+        </div>
+      </div>
+    </template>
 
     <div class="container-fluid">
+
 
       <div id="preamble">
       <div class="jumbotron">
@@ -115,335 +168,262 @@ an interactive or static analysis of a respiration. It&#39;s primary purpose is 
         <button type="button" class="btn btn-primary" id="300s_btn">300s</button>
 </div>
 
-  <div class="container-fluid">
-    <div class="row">
-  <div class="col-9">
-  <div id="timetop">
-            <div class="alert alert-info" role="alert" id="time_start">
-            Time of first sample
-            </div>
-            <div class="alert alert-info" role="alert" id="time_finish">
-            Time of last sample
-</div>
-  </div>
+<div id="data-area" class="container-fluid">
+  <div class="row">
+    <div class="col-9">
+      <div id="timetop">
+        <div class="alert alert-info" role="alert" id="time_start">
+          Time of first sample
+        </div>
+        <div class="alert alert-info" role="alert" id="time_finish">
+          Time of last sample
+        </div>
+      </div>
 
-            <div id='PFGraph'><!-- Pressure and Flow Graph --></div>
-            <div id='EventsGraph'><!-- Events --></div>
-          </div>
-          <div class="col-3">
+      <div id='PFGraph'><!-- Pressure and Flow Graph --></div>
+      <div id='EventsGraph'><!-- Events --></div>
+    </div>
+    <div class="col-3">
 
-            <div class="alert alert-danger" role="alert" id="main_alert">
-  Danger! Flow limits exceeded; volumes will be incorrect.
-            </div>
-              <div class="container" id="calcarea">
-              <div>
-                <label for="max">PIP (max): </label>
-                  <div class="value_and_fences">
-                    <div class="calcnum">
-                      <label id="max"> </label>
-                    </div>
-                    <div class="vertical_alarms">
-                    <div class="limit max">
-                      <label for="max_h">H:</label>
-                      <input class="fence" id="max_h" type='text'> </input>
-                    </div>
-                    <div class="limit min">
-                      <label for="max_l">L:</label>
-                      <input class="fence" id="max_l" type='text'> </input>
-                    </div>
-                    </div>
-                  </div>
-             </div>
-             <div class="engineering_only">
-                <label for="avg">P. Mean: </label>
-                  <div class="value_and_fences">
-                    <div class="calcnum">
-                      <label id="avg"> </label>
-                    </div>
-                    <div class="vertical_alarms">
-                    <div class="limit max">
-                      <label for="avg_h">H:</label>
-                      <input class="fence" id="avg_h" type='text'> </input>
-                    </div>
-                    <div class="limit min">
-                      <label for="avg_l">L:</label>
-                      <input class="fence" id="avg_l" type='text'> </input>
-                    </div>
-                    </div>
-                  </div>
-             </div>
-             <div>
-                <label for="min">PEEP (min): </label>
-                  <div class="value_and_fences">
-                    <div class="calcnum">
-                      <label id="min"> </label>
-                    </div>
-                    <div class="vertical_alarms">
-                    <div class="limit max">
-                      <label for="min_h">H:</label>
-                      <input class="fence" id="min_h" type='text'> </input>
-                    </div>
-                    <div class="limit min">
-                      <label for="min_l">L:</label>
-                      <input class="fence" id="min_l" type='text'> </input>
-                    </div>
-                    </div>
-                  </div>
-             </div>
-             <div>
-                <label for="mv">MVs (l/min): </label>
-                  <div class="value_and_fences">
-                    <div class="calcnum">
-                      <label id="mv"> </label>
-                    </div>
-                    <div class="vertical_alarms">
-                    <div class="limit max">
-                      <label for="mv_h">H:</label>
-                      <input class="fence" id="mv_h" type='text'> </input>
-                    </div>
-                    <div class="limit min">
-                      <label for="mv_l">L:</label>
-                      <input class="fence" id="mv_l" type='text'> </input>
-                    </div>
-                    </div>
-                  </div>
-                </div>
-              <div>
-                <label for="bpm">RR: </label>
-                  <div class="value_and_fences">
-                    <div class="calcnum">
-                      <label id="bpm"> </label>
-                    </div>
-                    <div class="vertical_alarms">
-                    <div class="limit max">
-                      <label for="bmp_h">H:</label>
-                      <input class="fence" id="bpm_h" type='text'> </input>
-                    </div>
-                    <div class="limit min">
-                      <label for="bpm_l">L:</label>
-                      <input class="fence" id="bpm_l" type='text'> </input>
-                    </div>
-                    </div>
-                  </div>
-                </div>
-                <div>
-                  <label for="ier">I:E ratio: </label>
-                  <div class="value_and_fences">
-                    <div class="calcnum">
-                      <label id="ier"> </label>
-                    </div>
-                    <div class="vertical_alarms">
-                    <div class="limit max">
-                      <label for="ier_h">H:</label>
-                      <input class="fence" id="ier_h" type='text'> </input>
-                    </div>
-                    <div class="limit min">
-                      <label for="ier_l">L:</label>
-                      <input class="fence" id="ier_l" type='text'> </input>
-                    </div>
-                    </div>
-                  </div>
-              </div>
-                <div>
-                <label for="tv">VTd (ml): </label>
-                  <div class="value_and_fences">
-                    <div class="calcnum">
-                      <label id="tv"> </label>
-                    </div>
-                    <div class="vertical_alarms">
-                    <div class="limit max">
-                      <label for="tv_h">H:</label>
-                      <input class="fence" id="tv_h" type='text'> </input>
-                    </div>
-                    <div class="limit min">
-                      <label for="tv_l">L:</label>
-                      <input class="fence" id="tv_l" type='text'> </input>
-                    </div>
-                    </div>
-                  </div>
-              </div>
-                <div>
-                  <label for="fio2">FiO2 Mean (%): </label>
-                  <div class="value_and_fences">
-                    <div class="calcnum">
-                      <label id="fio2"> </label>
-                    </div>
-                    <div class="vertical_alarms">
-                      <div class="limit max">
-                        <label for="fio2_h">H:</label>
-                        <input class="fence" id="fio2_h" type='text'> </input>
-                    </div>
-                    <div class="limit min">
-                      <label for="fio2_l">L:</label>
-                      <input class="fence" id="fio2_l" type='text'> </input>
-                    </div>
-                  </div>
-                </div>
-                <div class="engineering_only">
-                  <label for="taip">Rise Time (ms): </label>
-                  <div class="value_and_fences">
-                    <div class="calcnum">
-                      <label id="taip"> </label>
-                    </div>
-                    <div class="vertical_alarms">
-                      <div class="limit max">
-                        <label for="taip_h">H:</label>
-                        <input class="fence" id="taip_h" type='text'> </input>
-                    </div>
-                    <div class="limit min">
-                      <label for="taip_l">L:</label>
-                      <input class="fence" id="taip_l" type='text'> </input>
-                    </div>
-                  </div>
-                </div>
-              </div>
-                <div class="engineering_only">
-                  <label for="taip">Fall Time (ms): </label>
-                  <div class="value_and_fences">
-                    <div class="calcnum">
-                      <label id="trip"> </label>
-                    </div>
-                    <div class="vertical_alarms">
-                      <div class="limit max">
-                        <label for="trip_h">H:</label>
-                        <input class="fence" id="trip_h" type='text'> </input>
-                    </div>
-                    <div class="limit min">
-                      <label for="trip_l">L:</label>
-                      <input class="fence" id="trip_l" type='text'> </input>
-                    </div>
-                  </div>
-                </div>
-                <div class="engineering_only">
-                  <label for="wob">W. of B. (J/L): </label>
-                  <div class="value_and_fences">
-                    <div class="calcnum">
-                      <label id="wob"> </label>
-                    </div>
-                    <div class="vertical_alarms">
-                      <div class="limit max">
-                        <label for="wob_h">H:</label>
-                        <input class="fence" id="wob_h" type='text'> </input>
-                    </div>
-                    <div class="limit min">
-                      <label for="wob_l">L:</label>
-                      <input class="fence" id="wob_l" type='text'> </input>
-                    </div>
-                  </div>
-                </div>
-              </div>
+      <div class="alert alert-danger" role="alert" id="main_alert">
+        Danger! Flow limits exceeded; volumes will be incorrect.
+      </div>
+      <div class="container" id="calcarea">
+    <observable-x id="pipmax">
+      <span slot="obs-title">PIP (max):</span>
+      <span slot="obs-value">0</span>
+      <span slot="obs-max">40</span>
+      <span slot="obs-min">0</span>
+    </observable-x>
+    <observable-x id="pipavg" class="engineering_only">
+      <span slot="obs-title">P. Mean:</span>
+      <span slot="obs-value">0</span>
+      <span slot="obs-max">40</span>
+      <span slot="obs-min">0</span>
+    </observable-x>
+    <observable-x id="pipmin">
+      <span slot="obs-title">PEEP (min):</span>
+      <span slot="obs-value">0</span>
+      <span slot="obs-max">40</span>
+      <span slot="obs-min">0</span>
+    </observable-x>
+    <observable-x id="mv">
+      <span slot="obs-title">MVs (l/min):</span>
+      <span slot="obs-value">0</span>
+      <span slot="obs-max">10</span>
+      <span slot="obs-min">1</span>
+    </observable-x>
+    <observable-x id="bpm">
+      <span slot="obs-title">RR</span>
+      <span slot="obs-value">0</span>
+      <span slot="obs-max">10</span>
+      <span slot="obs-min">1</span>
+    </observable-x>
+    <observable-x id="inhalation-to-exhalation-r">
+      <span slot="obs-title">I:E ratio: </span>
+      <span slot="obs-value">0</span>
+      <span slot="obs-max">10</span>
+      <span slot="obs-min">1</span>
+    </observable-x>
+    <observable-x id="tidal-volume">
+      <span slot="obs-title">VTd (ml): </span>
+      <span slot="obs-value">0</span>
+      <span slot="obs-max">1000</span>
+      <span slot="obs-min">200</span>
+    </observable-x>
+    <observable-x id="fi-oxygen2" class="engineering_only">
+      <span slot="obs-title">FiO2 Mean (%): </span>
+      <span slot="obs-value">0</span>
+      <span slot="obs-max">100</span>
+      <span slot="obs-min">0</span>
+    </observable-x>
+    <observable-x id="time-achieve-ip" class="engineering_only">
+      <span slot="obs-title">Rise Time (ms): </span>
+      <span slot="obs-value">0</span>
+      <span slot="obs-max">2000</span>
+      <span slot="obs-min">0</span>
+    </observable-x>
+    <observable-x id="time-release-inspiratory-pressure" class="engineering_only">
+      <span slot="obs-title">Fall Time (ms): </span>
+      <span slot="obs-value">0</span>
+      <span slot="obs-max">2000</span>
+      <span slot="obs-min">0</span>
+    </observable-x>
+    <observable-x id="work-of-breathing" class="engineering_only">
+      <span slot="obs-title">W. of B. (J/L): </span>
+      <span slot="obs-value">0</span>
+      <span slot="obs-max">100</span>
+      <span slot="obs-min">0</span>
+    </observable-x>
             </div>
           </div>
         </div>
       </div>
-    </div> <!-- end main area -->
-  </div>
-
-  <!-- CONTROL PANEL START -->
-  <div class="container-fluid" id="control-area">
-    <button id="show_controls" type="button" class="btn btn-primary">EXPAND/COLLAPSE CONTROLS</button>
-    <div id="control-slot">
-    <p>Note: This is an experimental feature designed to be used with serialserver.js, specifially with a VentOS-powered device. If those words mean nothing to you, this feature is probably not for you!</p>
-  <div class="row">
-    <div class="col-6">
-    <div class="control-wrapper row">
-      <label class="col-2" for="control-mode">Mode:</label>
-      <input class="col-9" type="range" id="control-mode" name="control-mode" min="0" max="2" value="0"/>
-      <label class="col-1" id="control-mode-val">PCV</label>
     </div>
-    <div class="control-wrapper row">
-      <label class="col-2" for="control-rr">RR:</label>
-      <input class="col-9" type="range" id="control-rr" name="control-rr" min="1" max="30" value="12"/>
-      <label class="col-1" id="control-rr-val">12</label>
-    </div>
-    <div class="control-wrapper row">
-      <label class="col-2" for="control-ie">EI (x10) :</label>
-      <input class="col-9" type="range" id="control-ie" name="control-ie" min="5" max="50" step="1" value="30"/>
-      <label class="col-1" id="control-ie-val">30</label>
-    </div>
-    <div class="control-wrapper row">
-      <label class="col-2" for="control-pinsp">Pinsp (cmH20):</label>
-      <input class="col-9" type="range" id="control-pinsp" name="control-pinsp" min="10" max="50" value="35"/>
-      <label class="col-1" id="control-pinsp-val">35</label>
-    </div>
-    <div class="control-wrapper row">
-      <label class="col-2" for="control-vinsp">Vinsp:</label>
-      <input class="col-9" type="range" id="control-vinsp" name="control-vinsp" min="200" max="800" step="20" value="500"/>
-      <label class="col-1" id="control-vinsp-val">500</label>
-    </div>
-    <div class="control-wrapper row">
-      <label class="col-2" for="control-peep">PEEP (cmH20):</label>
-      <input class="col-9" type="range" id="control-peep" name="control-peep" min="0" max="15" value="5"/>
-      <label class="col-1" id="control-peep-val">5</label>
-    </div>
-
-
-    <button id="control-start" type="button" class="btn btn-primary">START</button>
-  </div>
-  </div>
-
-  <div class="col-6">
-    <div>
-      <b>Status:</b> no device connected
-    </div>
-    <div>
-      <b>Log:</b> some log info
-    </div>
-  </div>
-</div>
-
-  </div>
-  <!-- CONTROL PANEL END -->
-  <div class="container-fluid" id="control-area">
-    <button id="show_parameters" type="button" class="btn btn-primary">EXPAND/COLLAPSE PARAMETERS</button>
-<div id="parameter-slot">
-  <div>
-  Parameters:
-  <div>
-        <label for="tarip_h">Rise/Fall High Pressure (cm H2O):</label>
-  <input class="fence" id="tarip_h" type='text'> </input>
-  </div>
-  <div>
-        <label for="tarip_l">Rise/Fall Low Pressure (cm H2O):</label>
-  <input class="fence" id="tarip_l" type='text'> </input>
-  </div>
-</div>
-
-<div>
-  <button id="import">Import Trace</button>
-  <button id="export">Export Trace</button>
-</div>
-<div>
-  <textarea id="json_trace" rows="30" cols="80"></textarea>
-</div>
-
-<p>
-  This is a work in progress of <a href="https://www.pubinv.org">Public Invention</a>.
-
-<p>
-  This is a tester tool for open-source ventilators.
-  It uses the <a href="https://github.com/PubInv/respiration-data-standard">PIRDS data format</a>.
-
-<p>
-  The basic operation is receive data from web server specified in the URL above.
-  Probably for now that will be the VentMon Python web server that
-  listens on a serial port for the VentMon device or any other
-  device that streams PIRDS events.
-</div>
-  </div>
+  </div> <!-- end main area -->
+  <div class="flex settings_area">
+    <button id="setting_mode" class="settings_button">
+      Mode<br></br>
+      <div class="setting_value">
+        <div class="setting">
+          <label id="value"> 35.7 </label>
+        </div>
       </div>
+    </button>
+
+    <button id="setting_pimax" class="settings_button">
+      Pimax<br></br>
+      <div class="setting_value">
+        <div class="setting">
+          <label id="value"> 35.7 </label>
+        </div>
+      </div>
+    </button>
+  <button id="setting_TV" class="settings_button">
+    TV<br></br>
+    <div class="setting_value">
+      <div class="setting">
+        <label id="value"> 35.7 </label>
+      </div>
+    </div>
+  </button>
+  <button id="setting_RR" class="settings_button">
+    RR<br></br>
+    <div class="setting_value">
+      <div class="setting">
+        <label id="value"> 35.7 </label>
+      </div>
+    </div>
+  </button>
+  <button id="setting_IE"  class="settings_button">
+    IE<br></br>
+    <div class="setting_value">
+      <div class="setting">
+        <label id="value"> 35.7 </label>
+      </div>
+    </div>
+  </button>
+  <button id="setting_PEEP"  class="settings_button">
+    IE<br></br>
+    <div class="setting_value">
+      <div class="setting">
+        <label id="value"> 35.7 </label>
+      </div>
+    </div>
+  </button>
+</div>
+</div>
+
+
+      </div>
+
+      <!-- CONTROL PANEL START -->
+      <div class="container-fluid" id="control-area">
+        <button id="show_controls" type="button" class="btn btn-primary">EXPAND/COLLAPSE CONTROLS</button>
+        <div id="control-slot">
+          <p>Note: This is an experimental feature designed to be used with serialserver.js, specifially with a VentOS-powered device. If those words mean nothing to you, this feature is probably not for you!</p>
+          <div class="row">
+            <div class="col-6">
+              <div class="control-wrapper row">
+                <label class="col-2" for="control-mode">Mode:</label>
+                <input class="col-9" type="range" id="control-mode" name="control-mode" min="0" max="2" value="0"/>
+                <label class="col-1" id="control-mode-val">PCV</label>
+              </div>
+              <div class="control-wrapper row">
+                <label class="col-2" for="control-rr">RR:</label>
+                <input class="col-9" type="range" id="control-rr" name="control-rr" min="1" max="30" value="12"/>
+                <label class="col-1" id="control-rr-val">12</label>
+              </div>
+              <div class="control-wrapper row">
+                <label class="col-2" for="control-ie">EI (x10) :</label>
+                <input class="col-9" type="range" id="control-ie" name="control-ie" min="5" max="50" step="1" value="30"/>
+                <label class="col-1" id="control-ie-val">30</label>
+              </div>
+              <div class="control-wrapper row">
+                <label class="col-2" for="control-pinsp">Pinsp (cmH20):</label>
+                <input class="col-9" type="range" id="control-pinsp" name="control-pinsp" min="10" max="50" value="35"/>
+                <label class="col-1" id="control-pinsp-val">35</label>
+              </div>
+              <div class="control-wrapper row">
+                <label class="col-2" for="control-vinsp">Vinsp:</label>
+                <input class="col-9" type="range" id="control-vinsp" name="control-vinsp" min="200" max="800" step="20" value="500"/>
+                <label class="col-1" id="control-vinsp-val">500</label>
+              </div>
+              <div class="control-wrapper row">
+                <label class="col-2" for="control-peep">PEEP (cmH20):</label>
+                <input class="col-9" type="range" id="control-peep" name="control-peep" min="0" max="15" value="5"/>
+                <label class="col-1" id="control-peep-val">5</label>
+              </div>
+
+
+              <button id="control-start" type="button" class="btn btn-primary">START</button>
+            </div>
+          </div>
+
+          <div class="col-6">
+            <div>
+              <b>Status:</b> no device connected
+            </div>
+            <div>
+              <b>Log:</b> some log info
+            </div>
+          </div>
+        </div>
+
+      </div>
+      <!-- CONTROL PANEL END -->
+      <div class="container-fluid" id="control-area">
+        <button id="show_parameters" type="button" class="btn btn-primary">EXPAND/COLLAPSE PARAMETERS</button>
+        <div id="parameter-slot">
+          <div>
+            Parameters:
+            <div>
+              <label for="tarip_h">Rise/Fall High Pressure (cm H2O):</label>
+              <input class="fence" id="tarip_h" type='text'> </input>
+            </div>
+            <div>
+              <label for="tarip_l">Rise/Fall Low Pressure (cm H2O):</label>
+              <input class="fence" id="tarip_l" type='text'> </input>
+            </div>
+          </div>
+
+          <div>
+            <button id="import">Import Trace</button>
+            <button id="export">Export Trace</button>
+          </div>
+          <div>
+            <textarea id="json_trace" rows="30" cols="80"></textarea>
+          </div>
+
+          <p>
+            This is a work in progress of <a href="https://www.pubinv.org">Public Invention</a>.
+
+          <p>
+            This is a tester tool for open-source ventilators.
+            It uses the <a href="https://github.com/PubInv/respiration-data-standard">PIRDS data format</a>.
+
+          <p>
+            The basic operation is receive data from web server specified in the URL above.
+            Probably for now that will be the VentMon Python web server that
+            listens on a serial port for the VentMon device or any other
+            device that streams PIRDS events.
+        </div>
+      </div>
+    </div>
+
+
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/gitbrent/bootstrap4-toggle@3.6.1/js/bootstrap4-toggle.min.js"></script>
 
-	<!-- Load plotly.js into the DOM -->
+    <!-- Load plotly.js into the DOM -->
     <script src='https://cdn.plot.ly/plotly-latest.min.js'></script>
 
-  <script>
-    const SEVENINCHEL14TS = false;
-  </script>
-  <script src='js/respiraworks_to_PIRDS.js'></script>
-  <script src='js/respiration_math.js'></script>
-  <script src='js/PIRDS_utilities.js'></script>
-  <script src='js/breath_plot_ctl.js'></script>
+    <script>
+      const SEVENINCHEL14TS = false;
+    </script>
+    <script src='js/respiraworks_to_PIRDS.js'></script>
+    <script src='js/respiration_math.js'></script>
+    <script src='js/PIRDS_utilities.js'></script>
+    <script src='js/breath_plot_ctl.js'></script>
 
   </body>

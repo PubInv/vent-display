@@ -765,19 +765,23 @@ function compute_and_render_observations(samples,transitions,breaths) {
 
   var alarms = [];
 
-  $("#bpm").text(bpm.toFixed(1));
-  $("#tv").text(tv.toFixed(0));
-  $("#mv").text(mv.toFixed(2));
+  // To set the custom element, we select the
+  // span to modify. The first is the title,
+  // the second is the value.
+  $("#bpm span:nth-child(2)").text(bpm.toFixed(1));
+
+  $("#tidal-volume span:nth-child(2").text(tv.toFixed(0));
+  $("#mv span:nth-child(2)").text(mv.toFixed(2));
 
   if (wob == "NA") {
-    $("#wob").text("NA");
+    $("#work-of-breathing span:nth-child(2)").text("NA");
   } else {
-    $("#wob").text(wob.toFixed(2));
+    $("#work-of-breathing span:nth-child(2)").text(wob.toFixed(2));
   }
   if (EIratio == "NA") {
-    $("#ier").text("NA");
+    $("#inhalation-to-exhalation-r span:nth-child(2)").text("NA");
   } else {
-    $("#ier").text((1.0 / EIratio).toFixed(1));
+    $("#inhalation-to-exhalation-r span:nth-child(2)").text((1.0 / EIratio).toFixed(1));
   }
 
   var final_ms = samples[samples.length -1].ms;
@@ -810,11 +814,11 @@ function compute_and_render_observations(samples,transitions,breaths) {
     samples,
     true);
   if (taip != "NA") {
-    $("#taip").text(taip.toFixed(1));
+    $("#time-achieve-ip span:nth-child(2)").text(taip.toFixed(1));
     alarms = alarms.concat(
       check_high_and_low(LIMITS,"taip",taip,b_ms));
   } else {
-    $("#taip").text("NA");
+    $("#time-achieve-ip span:nth-child(2)").text("NA");
   }
 
   var trip = compute_mean_TRIP_or_TAIP(
@@ -823,27 +827,28 @@ function compute_and_render_observations(samples,transitions,breaths) {
     samples,
     false);
   if (trip != "NA") {
-    $("#trip").text(trip.toFixed(1));
+    $("#time-release-inspiratory-pressure span:nth-child(2)").text(trip.toFixed(1));
     alarms = alarms.concat(
       check_high_and_low(LIMITS,"trip",trip,b_ms));
   } else {
-    $("#trip").text("NA");
+    $("#time-release-inspiratory-pressure span:nth-child(2)").text("NA");
   }
 
   var [min,avg,max,palarms] = compute_pressures(RESPIRATION_RATE_WINDOW_SECONDS,samples,alarms,LIMITS);
   alarms = alarms.concat(palarms);
 
-  $("#min").text(min.toFixed(1));
-  $("#avg").text(avg.toFixed(1));
-  $("#max").text(max.toFixed(1));
+  $("#pipmax span:nth-child(2)").text(max.toFixed(1))
+  $("#pipavg span:nth-child(2)").text(avg.toFixed(1))
+  $("#pipmin span:nth-child(2)").text(min.toFixed(1))
+
 
   var fio2 = compute_fio2_mean(RESPIRATION_RATE_WINDOW_SECONDS,samples);
 
    if(fio2 == null){
-    $("#fio2").text("NA");
+    $("#fi-oxygen2 span:nth-child(2)").text("NA");
    } else {
     alarms = alarms.concat(check_high_and_low(LIMITS,"fio2",fio2.toFixed(1),b_ms));
-    $("#fio2").text(fio2.toFixed(1));
+    $("#fi-oxygen2 span:nth-child(2)").text(fio2.toFixed(1));
    }
 
   reflectAlarmsInGUI(alarms);
@@ -1340,6 +1345,42 @@ $( document ).ready(function() {
   $("#180s_btn").click(handle_timing_button);
   $("#300s_btn").click(handle_timing_button);
 
+
+
+  $("#livetoggle").prop("checked",true);
+  $("#clinical_display").prop("checked",false);
+  $("#clinical_display").change(change_clinical);
+
+console.dir("SEVENINCHEL14TS",SEVENINCHEL14TS);
+
+//let template = document.getElementById('observablex');
+//let templateContent = template.content;
+//document.body.appendChild(templateContent);
+
+  let customElements = window.customElements;
+
+customElements.define('observable-x',
+  class extends HTMLElement {
+    constructor() {
+      super();
+      let template = document.getElementById('observable-xx');
+      let templateContent = template.content;
+
+      const shadowRoot = this.attachShadow({mode: 'open'})
+        .appendChild(templateContent.cloneNode(true));
+    }
+    connectedCallback(){
+      this.shadowRoot.addEventListener("click", function (e) {
+        console.log('listend to check event');
+        console.log(e);
+        alert("handler for setting not defined yet!");
+      });
+    }
+  }
+                     );
+
+
+
 });
 
 
@@ -1349,15 +1390,16 @@ function change_clinical() {
     $("#calcarea").css('background',CLINICAL_COLORS.sidebar_bg);
     $("#calcarea *").css('background',CLINICAL_COLORS.sidebar_bg);
     $("#calcarea *").css('color',CLINICAL_COLORS.text_color);
+    $(".settings_area").css('background',CLINICAL_COLORS.bg);
+    $("#data-area").css('background',CLINICAL_COLORS.bg);
   } else {
     $(".engineering_only").show();
     $("#calcarea").css('background',ENGINEERING_COLORS.sidebar_bg);
     $("#calcarea *").css('background',ENGINEERING_COLORS.sidebar_bg);
     $("#calcarea *").css('color',ENGINEERING_COLORS.text_color);
+
+    $(".settings_area").css('background',ENGINEERING_COLORS.bg);
+    $("#data-area").css('background',ENGINEERING_COLORS.bg);
+
   }
 }
-$("#livetoggle").prop("checked",true);
-$("#clinical_display").prop("checked",false);
-$("#clinical_display").change(change_clinical);
-
-console.dir("SEVENINCHEL14TS",SEVENINCHEL14TS);
