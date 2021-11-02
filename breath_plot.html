@@ -76,13 +76,11 @@ Breath Plot: COVID-19 Respiration Analysis Software
           <div class="vertical_alarms">
             <div class="limit max">
               <label for="max_h">H:</label>
-              <input class="fence" id="max_h" type='text'>
               <slot name="obs-max">111</slot>
 </input>
             </div>
             <div class="limit min">
               <label for="max_l">L:</label>
-              <input class="fence" id="max_l" type='text'>
               <slot name="obs-min">222</slot>
 </input>
             </div>
@@ -247,37 +245,37 @@ Breath Plot: COVID-19 Respiration Analysis Software
               <span slot="obs-max">10</span>
               <span slot="obs-min">1</span>
             </observable-setter>
-            <observable-setter id="inhalation-to-exhalation-r-setter">
+            <observable-setter id="inhalationtoexhalation-setter">
               <span slot="obs-title">I:E ratio: </span>
               <span slot="obs-value">0</span>
               <span slot="obs-max">10</span>
               <span slot="obs-min">1</span>
             </observable-setter>
-            <observable-setter id="tidal-volume-setter">
+            <observable-setter id="tidalvolume-setter">
               <span slot="obs-title">VTd (ml): </span>
               <span slot="obs-value">0</span>
               <span slot="obs-max">1000</span>
               <span slot="obs-min">200</span>
             </observable-setter>
-            <observable-setter id="fi-oxygen2-setter" class="engineering_only">
+            <observable-setter id="fioxygen2-setter" class="engineering_only">
               <span slot="obs-title">FiO2 Mean (%): </span>
               <span slot="obs-value">0</span>
               <span slot="obs-max">100</span>
               <span slot="obs-min">0</span>
             </observable-setter>
-            <observable-setter id="time-achieve-ip-setter" class="engineering_only">
+            <observable-setter id="timeachieveip-setter" class="engineering_only">
               <span slot="obs-title">Rise Time (ms): </span>
               <span slot="obs-value">0</span>
               <span slot="obs-max">2000</span>
               <span slot="obs-min">0</span>
             </observable-setter>
-            <observable-setter id="time-release-inspiratory-pressure-setter" class="engineering_only">
+            <observable-setter id="timereleaseinspiratorypressure-setter" class="engineering_only">
               <span slot="obs-title">Fall Time (ms): </span>
               <span slot="obs-value">0</span>
               <span slot="obs-max">2000</span>
               <span slot="obs-min">0</span>
             </observable-setter>
-            <observable-setter id="work-of-breathing-setter" class="engineering_only">
+            <observable-setter id="workofbreathing-setter" class="engineering_only">
               <span slot="obs-title">W. of B. (J/L): </span>
               <span slot="obs-value">0</span>
               <span slot="obs-max">100</span>
@@ -336,37 +334,37 @@ Breath Plot: COVID-19 Respiration Analysis Software
                     <span slot="obs-max">10</span>
                     <span slot="obs-min">1</span>
                   </observable-x>
-                  <observable-x id="inhalation-to-exhalation-r">
+                  <observable-x id="inhalationtoexhalation">
                     <span slot="obs-title">I:E ratio: </span>
                     <span slot="obs-value">0</span>
                     <span slot="obs-max">10</span>
                     <span slot="obs-min">1</span>
                   </observable-x>
-                  <observable-x id="tidal-volume">
+                  <observable-x id="tidalvolume">
                     <span slot="obs-title">VTd (ml): </span>
                     <span slot="obs-value">0</span>
                     <span slot="obs-max">1000</span>
                     <span slot="obs-min">200</span>
                   </observable-x>
-                  <observable-x id="fi-oxygen2" class="engineering_only">
+                  <observable-x id="fioxygen2" class="engineering_only">
                     <span slot="obs-title">FiO2 Mean (%): </span>
                     <span slot="obs-value">0</span>
                     <span slot="obs-max">100</span>
                     <span slot="obs-min">0</span>
                   </observable-x>
-                  <observable-x id="time-achieve-ip" class="engineering_only">
+                  <observable-x id="timeachieve-ip" class="engineering_only">
                     <span slot="obs-title">Rise Time (ms): </span>
                     <span slot="obs-value">0</span>
                     <span slot="obs-max">2000</span>
                     <span slot="obs-min">0</span>
                   </observable-x>
-                  <observable-x id="time-release-inspiratory-pressure" class="engineering_only">
+                  <observable-x id="timereleaseinspiratory-pressure" class="engineering_only">
                     <span slot="obs-title">Fall Time (ms): </span>
                     <span slot="obs-value">0</span>
                     <span slot="obs-max">2000</span>
                     <span slot="obs-min">0</span>
                   </observable-x>
-                  <observable-x id="work-of-breathing" class="engineering_only">
+                  <observable-x id="workofbreathing" class="engineering_only">
                     <span slot="obs-title">W. of B. (J/L): </span>
                     <span slot="obs-value">0</span>
                     <span slot="obs-max">100</span>

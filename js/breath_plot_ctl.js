@@ -770,18 +770,18 @@ function compute_and_render_observations(samples,transitions,breaths) {
   // the second is the value.
   $("#bpm span:nth-child(2)").text(bpm.toFixed(1));
 
-  $("#tidal-volume span:nth-child(2").text(tv.toFixed(0));
+  $("#tidalvolume span:nth-child(2").text(tv.toFixed(0));
   $("#mv span:nth-child(2)").text(mv.toFixed(2));
 
   if (wob == "NA") {
-    $("#work-of-breathing span:nth-child(2)").text("NA");
+    $("#workofbreathing span:nth-child(2)").text("NA");
   } else {
-    $("#work-of-breathing span:nth-child(2)").text(wob.toFixed(2));
+    $("#workofbreathing span:nth-child(2)").text(wob.toFixed(2));
   }
   if (EIratio == "NA") {
-    $("#inhalation-to-exhalation-r span:nth-child(2)").text("NA");
+    $("#inhalationtoexhalation span:nth-child(2)").text("NA");
   } else {
-    $("#inhalation-to-exhalation-r span:nth-child(2)").text((1.0 / EIratio).toFixed(1));
+    $("#inhalationtoexhalation span:nth-child(2)").text((1.0 / EIratio).toFixed(1));
   }
 
   var final_ms = samples[samples.length -1].ms;
@@ -814,11 +814,11 @@ function compute_and_render_observations(samples,transitions,breaths) {
     samples,
     true);
   if (taip != "NA") {
-    $("#time-achieve-ip span:nth-child(2)").text(taip.toFixed(1));
+    $("#timeachieve-ip span:nth-child(2)").text(taip.toFixed(1));
     alarms = alarms.concat(
       check_high_and_low(LIMITS,"taip",taip,b_ms));
   } else {
-    $("#time-achieve-ip span:nth-child(2)").text("NA");
+    $("#timeachieve-ip span:nth-child(2)").text("NA");
   }
 
   var trip = compute_mean_TRIP_or_TAIP(
@@ -827,11 +827,11 @@ function compute_and_render_observations(samples,transitions,breaths) {
     samples,
     false);
   if (trip != "NA") {
-    $("#time-release-inspiratory-pressure span:nth-child(2)").text(trip.toFixed(1));
+    $("#timereleaseinspiratorypressure span:nth-child(2)").text(trip.toFixed(1));
     alarms = alarms.concat(
       check_high_and_low(LIMITS,"trip",trip,b_ms));
   } else {
-    $("#time-release-inspiratory-pressure span:nth-child(2)").text("NA");
+    $("#timereleaseinspiratorypressure span:nth-child(2)").text("NA");
   }
 
   var [min,avg,max,palarms] = compute_pressures(RESPIRATION_RATE_WINDOW_SECONDS,samples,alarms,LIMITS);
@@ -845,10 +845,10 @@ function compute_and_render_observations(samples,transitions,breaths) {
   var fio2 = compute_fio2_mean(RESPIRATION_RATE_WINDOW_SECONDS,samples);
 
    if(fio2 == null){
-    $("#fi-oxygen2 span:nth-child(2)").text("NA");
+    $("#fioxygen2 span:nth-child(2)").text("NA");
    } else {
     alarms = alarms.concat(check_high_and_low(LIMITS,"fio2",fio2.toFixed(1),b_ms));
-    $("#fi-oxygen2 span:nth-child(2)").text(fio2.toFixed(1));
+    $("#fioxygen2 span:nth-child(2)").text(fio2.toFixed(1));
    }
 
   reflectAlarmsInGUI(alarms);
@@ -1431,8 +1431,28 @@ customElements.define('observable-x',
 
   function elementIdToLIMITSKey(id) {
     switch (id) {
-    case "pip-max":
+    case "pipmax":
       return "max";
+    case "pipavg":
+      return "avg";
+    case "pipmin":
+      return "min";
+    case "mv":
+      return "mv";
+    case "bpm":
+      return "bpm";
+    case "inhalationtoexhalation":
+      return "ier";
+    case "tidalvolume":
+      return "tv";
+    case "fioxygen2":
+      return "fio2";
+    case "timeacheiveip":
+      return "taip";
+    case "timereleaseinspiratorypressure":
+      return "trip";
+    case "workofbreathing":
+      return "wob";
     default:
       console.error("internal error!");
     }
@@ -1465,19 +1485,25 @@ customElements.define('observable-x',
   }
   function setLimitFromObservableHigh(id,ed) {
     const jqel = $("#"+id)[0];
-    console.log("shadowRoot",jqel.shadowRoot);
-    console.log("key press low",id,ed);
     const high = getHighFromObservableSetterShadowRoot(jqel.shadowRoot);
-    console.log(high);
-    console.log(high.value);
+    const setterName = id.split("-")[0];
+    console.log("setterName",setterName);
+    const key = elementIdToLIMITSKey(setterName);
+    console.log("key",key);
+    LIMITS[key].h = parseInt(high.value);
+    $("#" + setterName +" span:nth-child(3)").text(LIMITS[key].h);
+    console.log("#" + setterName +" span:nth-child(3)");
+    console.log($("#" + setterName +" span:nth-child(3)").text());
   }
   function setLimitFromObservableLow(id,ed) {
     const jqel = $("#"+id)[0];
-    console.log("shadowRoot",jqel.shadowRoot);
-    console.log("key press low",id,ed);
     const low = getLowFromObservableSetterShadowRoot(jqel.shadowRoot);
-    console.log(low);
-    console.log(low.value);
+    const setterName = id.split("-")[0];
+    console.log("setterName",setterName);
+    const key = elementIdToLIMITSKey(setterName);
+    console.log("key",key);
+    LIMITS[key].l = parseInt(low.value);
+    $("#" + setterName +" span:nth-child(4)").text(LIMITS[key].l);
   }
 customElements.define('observable-setter',
   class extends HTMLElement {
