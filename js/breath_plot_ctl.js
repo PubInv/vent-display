@@ -1171,6 +1171,39 @@ $("#startoperation").click(start_interval_timer);
 
 $("#stopoperation").click(stop_interval_timer);
 
+
+function sendOnePIRCS(url,get_or_post,k,val) {
+  $.ajax({
+    //url: lh+"/api/pircs?com=C&par="+parName+"&int="+interp+"&mod="+modifier+"&val="+val,
+    type: get_or_post,
+    url: url,
+    dataType: 'json',
+    data: { com: "C", par: k, int: "T", mod: 0, val: dict[k] }
+  }).done(function(result) {
+    console.log("result: " + JSON.stringify(result));
+  }).fail(function(xhr, ajaxOptions, thrownError) {
+    console.log("Error! " + xhr.status);
+    console.log(thrownError);
+  })
+}
+
+// These are our control modes...
+var CONTROL_SETTINGS = { mode: "PCV",
+                         pimax: 200,
+                         TV: 400,
+                         RR: 100,
+                         IE: 20,
+                         PEEP: 50 };
+
+// Here we will turn on the control-setter, which will be
+// analogous to the observable-setter
+function updatePimax() {
+  // First, we will show the left bar and the setter...
+  // It will be equipped with its own handler.
+}
+
+$("#control-pimax").click(updatePimax);
+
 // Send PIRCS commands when START button is pressed
     $("#control-start").click(
       async function(event) {
@@ -1195,6 +1228,7 @@ $("#stopoperation").click(stop_interval_timer);
         function sleep(ms) {
           return new Promise(resolve => setTimeout(resolve, ms));
         }
+
         for (var k in dict){
           // WARNING!!!!
           // This is a workaround because we can easily create
@@ -1212,19 +1246,8 @@ $("#stopoperation").click(stop_interval_timer);
             url = 'http://localhost:5000/api/pircs/'
             GET_OR_POST = 'GET';
           }
-          $.ajax({
-            //url: lh+"/api/pircs?com=C&par="+parName+"&int="+interp+"&mod="+modifier+"&val="+val,
-            type: GET_OR_POST,
-            url: url,
-            dataType: 'json',
-            data: { com: "C", par: k, int: "T", mod: 0, val: dict[k] }
-          }).done(function(result) {
-            console.log("result: " + JSON.stringify(result));
-          }).fail(function(xhr, ajaxOptions, thrownError) {
-            console.log("Error! " + xhr.status);
-            console.log(thrownError);
-          })
 
+          sendOnePIRCS(url,GET_OR_POST,k,dict[k]);
         }
       });
 
@@ -1353,6 +1376,27 @@ $( document ).ready(function() {
 
 console.dir("SEVENINCHEL14TS",SEVENINCHEL14TS);
 
+
+  // We need to get the id out of this, which for a general
+  // purpose mouse click can be a problem. However, I believe
+  // we can search the "e.path" array, which will always have
+  // "observable-x#id" in it, from which we can extract the id,
+  // in order to know what values to set on the return.
+  // We need this to get an id in the "LIMITS" arrange for
+  // us to know what to set. I can think of no other way than
+  // to do a reverse map; with the idea, we can a verison
+  // of "keypress to this function" which will set the value.
+  // NOTE: But I now believe this can all be done better by designing
+  // the features in HTML and then "showing" only the one we want,
+  // which will let us use an id more reasonably.
+  function add_high_low_input_to_sidebar(e) {
+
+    console.log("id:",e.currentTarget.host.id);
+    const id = e.currentTarget.host.id;
+//    const limit_key = lookup_limit_key_by_element_id(id);
+    openLeftHandModal(id);
+
+  }
 //let template = document.getElementById('observablex');
 //let templateContent = template.content;
 //document.body.appendChild(templateContent);
@@ -1373,16 +1417,100 @@ customElements.define('observable-x',
       this.shadowRoot.addEventListener("click", function (e) {
         console.log('listend to check event');
         console.log(e);
-        alert("handler for setting not defined yet!");
+        // What we really want to do here is to fill the sidebar
+        // with effectively a dismissible modal which gets the
+        // high and low values. This pretty much has to be
+        // appended to the "#leftsidebar" element, in the dom,
+        // because we must be free to place other things there.
+        // Some how we have to use our identity from e!
+        add_high_low_input_to_sidebar(e);
       });
     }
   }
                      );
 
+  function elementIdToLIMITSKey(id) {
+    switch (id) {
+    case "pip-max":
+      return "max";
+    default:
+      console.error("internal error!");
+    }
+  }
+
+  function closeLeftHandModalOnReturn(ed) {
+    if(ed.which == 13) {
+      closeLeftHandModal();
+    }
+  }
+  function closeLeftHandModal() {
+    $("observable-setter").hide();
+    $("#leftsidebar").hide();
+  }
+  function openLeftHandModal(id) {
+    $("#leftsidebar").show();
+    $("#"+ id + "-setter").show();
+  }
+  function getHighFromObservableSetterShadowRoot(sr) {
+    const limits = sr.children[1].children[1];
+    const highdiv = limits.children[0];
+    const high = highdiv.children[2];
+    return high;
+  }
+  function getLowFromObservableSetterShadowRoot(sr) {
+    const limits = sr.children[1].children[1];
+    const lowdiv = limits.children[1];
+    const low = lowdiv.children[2];
+    return low;
+  }
+  function setLimitFromObservableHigh(id,ed) {
+    const jqel = $("#"+id)[0];
+    console.log("shadowRoot",jqel.shadowRoot);
+    console.log("key press low",id,ed);
+    const high = getHighFromObservableSetterShadowRoot(jqel.shadowRoot);
+    console.log(high);
+    console.log(high.value);
+  }
+  function setLimitFromObservableLow(id,ed) {
+    const jqel = $("#"+id)[0];
+    console.log("shadowRoot",jqel.shadowRoot);
+    console.log("key press low",id,ed);
+    const low = getLowFromObservableSetterShadowRoot(jqel.shadowRoot);
+    console.log(low);
+    console.log(low.value);
+  }
+customElements.define('observable-setter',
+  class extends HTMLElement {
+    constructor() {
+      super();
+      let template = document.getElementById('observable-setter-xx');
+      let templateContent = template.content;
+      const shadowRoot = this.attachShadow({mode: 'open'})
+            .appendChild(templateContent.cloneNode(true));
+    }
+    connectedCallback(){
+      this.shadowRoot.addEventListener("keypress",
+                                       closeLeftHandModalOnReturn
+                                      );
+
+      const id = this.id;
+      console.log(id);
+      console.log("sr",this.shadowRoot);
+      const limits = this.shadowRoot.children[1].children[1];
+      const highdiv = limits.children[0];
+      const lowdiv = limits.children[1];
+      const high = highdiv.children[2];
+      const low = lowdiv.children[2];
+      console.log("high",high);
+      console.log("low",low);
+      high.addEventListener("input", (ed) => setLimitFromObservableHigh(id,ed) );
+      low.addEventListener("input", (ed) => setLimitFromObservableLow(id,ed) );
+    }
+  });
 
 
+  closeLeftHandModal();
 });
-
 
 function change_clinical() {
   if ($("#clinical_display").is(":checked")) {
