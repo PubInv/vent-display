@@ -1172,13 +1172,23 @@ $("#startoperation").click(start_interval_timer);
 $("#stopoperation").click(stop_interval_timer);
 
 
-function sendOnePIRCS(url,get_or_post,k,val) {
+function sendOnePIRCS(k,val) {
+  var url;
+  var GET_OR_POST;
+  if ($("#simulation").is(":checked")) {
+    // Note the slash at the end is needed
+    url =  DSERVER_URL + "/control/";
+    GET_OR_POST = 'POST';
+  } else {
+    url = 'http://localhost:5000/api/pircs/'
+    GET_OR_POST = 'GET';
+  }
   $.ajax({
     //url: lh+"/api/pircs?com=C&par="+parName+"&int="+interp+"&mod="+modifier+"&val="+val,
-    type: get_or_post,
+    type: GET_OR_POST,
     url: url,
     dataType: 'json',
-    data: { com: "C", par: k, int: "T", mod: 0, val: dict[k] }
+    data: { com: "C", par: k, int: "T", mod: 0, val: val }
   }).done(function(result) {
     console.log("result: " + JSON.stringify(result));
   }).fail(function(xhr, ajaxOptions, thrownError) {
@@ -1195,14 +1205,6 @@ var CONTROL_SETTINGS = { mode: "PCV",
                          IE: 20,
                          PEEP: 50 };
 
-// Here we will turn on the control-setter, which will be
-// analogous to the observable-setter
-function updatePimax() {
-  // First, we will show the left bar and the setter...
-  // It will be equipped with its own handler.
-}
-
-$("#control-pimax").click(updatePimax);
 
 // Send PIRCS commands when START button is pressed
     $("#control-start").click(
@@ -1236,18 +1238,7 @@ $("#control-pimax").click(updatePimax);
           // or Arduino. This really needs to be addressed in
           // our Node Server, AND also made more robust in VentOS.
           await sleep(500);
-          var url;
-          var GET_OR_POST;
-          if ($("#simulation").is(":checked")) {
-            // Note the slash at the end is needed
-            url =  DSERVER_URL + "/control/";
-            GET_OR_POST = 'POST';
-          } else {
-            url = 'http://localhost:5000/api/pircs/'
-            GET_OR_POST = 'GET';
-          }
-
-          sendOnePIRCS(url,GET_OR_POST,k,dict[k]);
+          sendOnePIRCS(k,dict[k]);
         }
       });
 
@@ -1464,10 +1455,15 @@ customElements.define('observable-x',
     }
   }
   function closeLeftHandModal() {
+    // observable-setter is a template,
+    // but controllable-setter is a class
     $("observable-setter").hide();
+    $(".controllable-setter").hide();
     $("#leftsidebar").hide();
   }
   function openLeftHandModal(id) {
+    // We want to remove anything else which is present
+    closeLeftHandModal();
     $("#leftsidebar").show();
     $("#"+ id + "-setter").show();
   }
@@ -1489,19 +1485,14 @@ customElements.define('observable-x',
     const setterName = id.split("-")[0];
     console.log("setterName",setterName);
     const key = elementIdToLIMITSKey(setterName);
-    console.log("key",key);
     LIMITS[key].h = parseInt(high.value);
     $("#" + setterName +" span:nth-child(3)").text(LIMITS[key].h);
-    console.log("#" + setterName +" span:nth-child(3)");
-    console.log($("#" + setterName +" span:nth-child(3)").text());
   }
   function setLimitFromObservableLow(id,ed) {
     const jqel = $("#"+id)[0];
     const low = getLowFromObservableSetterShadowRoot(jqel.shadowRoot);
     const setterName = id.split("-")[0];
-    console.log("setterName",setterName);
     const key = elementIdToLIMITSKey(setterName);
-    console.log("key",key);
     LIMITS[key].l = parseInt(low.value);
     $("#" + setterName +" span:nth-child(4)").text(LIMITS[key].l);
   }
@@ -1534,6 +1525,49 @@ customElements.define('observable-setter',
     }
   });
 
+  $("#setting_mode").click(() => openLeftHandModal("mode"));
+  $("#setting_pimax").click(() => openLeftHandModal("pimax"));
+  $("#setting_TV").click(() => openLeftHandModal("TV"));
+  $("#setting_RR").click(() => openLeftHandModal("RR"));
+  $("#setting_IE").click(() => openLeftHandModal("IE"));
+  $("#setting_PEEP").click(() => openLeftHandModal("PEEP"));
+
+  $("#controllable-mode-dismiss").click(() => {
+    const v = $("#controllable-mode").val();
+    sendOnePIRCS("M",v);
+    $("#setting_mode-value").text(v);
+    closeLeftHandModal();
+  });
+  $("#controllable-pimax-dismiss").click(() => {
+    const v = $("#controllable-pimax").val();
+    sendOnePIRCS("P",v*10);
+    $("#setting_pimax-value").text(v);
+    closeLeftHandModal();
+  });
+  $("#controllable-TV-dismiss").click(() => {
+    const v = $("#controllable-TV").val();
+    sendOnePIRCS("V",v);
+    $("#setting_TV-value").text(v);
+    closeLeftHandModal();
+  });
+  $("#controllable-RR-dismiss").click(() => {
+    const v = $("#controllable-RR").val();
+    sendOnePIRCS("B",v*10);
+    $("#setting_RR-value").text(v);
+    closeLeftHandModal();
+  });
+  $("#controllable-IE-dismiss").click(() => {
+    const v = $("#controllable-IE").val();
+    sendOnePIRCS("I",v);
+    $("#setting_IE-value").text(v);
+    closeLeftHandModal();
+  });
+  $("#controllable-PEEP-dismiss").click(() => {
+    const v = $("#controllable-PEEP").val();
+    sendOnePIRCS("E",v*10);
+    $("#setting_PEEP-value").text(v);
+    closeLeftHandModal();
+  });
 
   closeLeftHandModal();
 });

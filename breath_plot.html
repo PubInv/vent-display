@@ -281,7 +281,36 @@ Breath Plot: COVID-19 Respiration Analysis Software
               <span slot="obs-max">100</span>
               <span slot="obs-min">0</span>
             </observable-setter>
-
+            <div id="mode-setter" class="controllable-setter">
+                <label for="controllable-mode">Mode:</label>
+                <input id="controllable-mode" type='text'>
+                <button id="controllable-mode-dismiss" type='button'>dismiss</input>
+            </div>
+            <div id="pimax-setter" class="controllable-setter">
+                <label for="controllable-pimax">PIMAX:</label>
+                <input id="controllable-pimax" type='text'>
+                <button id="controllable-pimax-dismiss" type='button'>dismiss</input>
+            </div>
+            <div id="TV-setter" class="controllable-setter">
+                <label for="controllable-TV">Tidal Volume (ml):</label>
+                <input id="controllable-TV" type='text'>
+                <button id="controllable-TV-dismiss" type='button'>dismiss</input>
+            </div>
+            <div id="RR-setter" class="controllable-setter">
+                <label for="controllable-RR">RR (bpm):</label>
+                <input id="controllable-RR" type='text'>
+                <button id="controllable-RR-dismiss" type='button'>dismiss</input>
+            </div>
+            <div id="IE-setter" class="controllable-setter">
+                <label for="controllable-IE">IE</label>
+                <input id="controllable-IE" type='text'>
+                <button id="controllable-IE-dismiss" type='button'>dismiss</input>
+            </div>
+            <div id="PEEP-setter" class="controllable-setter">
+                <label for="controllable-PEEP">PEEP (cm H2O)</label>
+                <input id="controllable-PEEP" type='text'>
+                <button id="controllable-PEEP-dismiss" type='button'>dismiss</input>
+            </div>
           </div>
           <div id="data-area" class="container-fluid">
             <div class="row">
@@ -383,16 +412,15 @@ Breath Plot: COVID-19 Respiration Analysis Software
     Mode<br></br>
     <div class="setting_value">
       <div class="setting">
-        <label id="value"> 35.7 </label>
+        <label id="setting_mode-value"> 35.7 </label>
       </div>
     </div>
   </button>
-
   <button id="setting_pimax" class="settings_button">
     Pimax<br></br>
     <div class="setting_value">
       <div class="setting">
-        <label id="value"> 35.7 </label>
+        <label id="setting_pimax-value"> 35.7 </label>
       </div>
     </div>
   </button>
@@ -400,7 +428,7 @@ Breath Plot: COVID-19 Respiration Analysis Software
     TV<br></br>
     <div class="setting_value">
       <div class="setting">
-        <label id="value"> 35.7 </label>
+        <label id="setting_TV-value"> 35.7 </label>
       </div>
     </div>
   </button>
@@ -408,7 +436,7 @@ Breath Plot: COVID-19 Respiration Analysis Software
     RR<br></br>
     <div class="setting_value">
       <div class="setting">
-        <label id="value"> 35.7 </label>
+        <label id="setting_RR-value"> 35.7 </label>
       </div>
     </div>
   </button>
@@ -416,15 +444,15 @@ Breath Plot: COVID-19 Respiration Analysis Software
     IE<br></br>
     <div class="setting_value">
       <div class="setting">
-        <label id="value"> 35.7 </label>
+        <label id="setting_IE-value"> 35.7 </label>
       </div>
     </div>
   </button>
   <button id="setting_PEEP"  class="settings_button">
-    IE<br></br>
+    PEEP<br></br>
     <div class="setting_value">
       <div class="setting">
-        <label id="value"> 35.7 </label>
+        <label id="setting_PEEP-value"> 35.7 </label>
       </div>
     </div>
   </button>
