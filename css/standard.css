@@ -139,6 +139,10 @@ input:checked + .slider:before {
     padding: 10px;
     margin: 10px;
     width: 10em;
+  
+#setting_mode-value, #setting_pimax-value, #setting_TV-value, #setting_RR-value, #setting_IE-value, #setting_PEEP-value {
+    font-size: 300%;
+}  
 
 /*
 bg-cyan-300 border-2 border-solid border-red-300-contrast w-100% p-10 m-5 rounded-lg text-black
