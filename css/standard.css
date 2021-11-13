@@ -165,4 +165,38 @@ bg-cyan-300 border-2 border-solid border-red-300-contrast w-100% p-10 m-5 rounde
 }
 #leftsidebar {
     width: 25%;
+    margin-top: 10%;
 }
+
+#mode-setter label, #pimax-setter label, #TV-setter label, #RR-setter label, #IE-setter label, #PEEP-setter label {
+    margin: 0 0 200px 90px;
+    font-size: 50px;
+}
+
+#controllable-mode, #controllable-pimax, #controllable-TV, #controllable-RR, #controllable-IE, #controllable-PEEP {
+    font-size: 25px;
+}
+
+#controllable-mode-dismiss, #controllable-pimax-dismiss, #controllable-TV-dismiss, #controllable-RR-dismiss, #controllable-IE-dismiss,
+    #controllable-PEEP-dismiss
+{
+   font-size: 50px;
+   margin-top: 150px;
+   margin-left: 70px;
+
+}
+
+#pipmax-setter, #pipavg-setter, #pipmin-setter, #mv-setter, #bpm-setter, #inhalationtoexhalation-setter, #fioxygen2-setter, #workofbreathing-setter {
+    text-align: center;
+    font-size: 50px;
+}
+
+#tidalvolume-setter {
+    text-align: center;
+    font-size: 30px;
+}
+
+.limit-max label {
+    margin-top: 100px;
+}
+
