@@ -121,16 +121,16 @@ Breath Plot: COVID-19 Respiration Analysis Software
           <slot name="obs-title">OBS-TITLE NEEDED</slot>
         </label>
         <div class="vertical_alarms">
-          <div class="limit max">
+          <div class="limit-max">
             <label for="max_h">H:</label>
             <slot name="obs-max">111</slot>
-            <input class="fence" type='text'>
+            <input style="font-size: 50px; margin: 100px 30px 0 10px;" class="fence" type='text'>
 </input>
           </div>
-          <div class="limit min">
+          <div class="limit-min">
             <label for="max_l">L:</label>
             <slot name="obs-min">222</slot>
-            <input class="fence" type='text'>
+            <input style="font-size: 50px; margin: 200px 80px 0 0;"  class="fence" type='text'>
 </input>
           </div>
         </div>
@@ -216,9 +216,9 @@ Breath Plot: COVID-19 Respiration Analysis Software
         <div id="collapsingleftsidebar" >
           <div id="leftsidebar" style="display: none">
             <observable-setter id="pipmax-setter">
-              <span slot="obs-title">PIP (max):</span>
+              <span  slot="obs-title">PIP (max):</span>
               <span slot="obs-value">0</span>
-              <span slot="obs-max">40</span>
+              <span style="margin-top: 100px" slot="obs-max">40</span>
               <span slot="obs-min">0</span>
             </observable-setter>
             <observable-setter id="pipavg-setter" class="engineering_only">
