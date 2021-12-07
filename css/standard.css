@@ -154,7 +154,7 @@ bg-cyan-300 border-2 border-solid border-red-300-contrast w-100% p-10 m-5 rounde
     flex-direction: row;
     justify-content: space-around;
     height: 20%;
-    margin: 10px;
+    margin: 0 0.75rem 0 0.75rem;
     padding: 10px;
 }
 
@@ -163,11 +163,14 @@ bg-cyan-300 border-2 border-solid border-red-300-contrast w-100% p-10 m-5 rounde
     flex-direction: row;
     justify-content: space-around;
     flex-wrap: nowrap;
+
 }
 #leftsidebar {
     width: 25%;
     padding-top: 10%;
 }
+
+
 
 .controllable-setter  {
     text-align: center;

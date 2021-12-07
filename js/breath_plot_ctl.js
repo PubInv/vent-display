@@ -32,6 +32,7 @@ CLINICAL_COLORS = {
   pressure: "green",
   flow: "yellow",
   text_color: "yellow",
+  border: "white",
 }
 ENGINEERING_COLORS = {
   bg: "white",
@@ -1576,10 +1577,11 @@ function change_clinical() {
   if ($("#clinical_display").is(":checked")) {
     $(".engineering_only").hide();
     $("#calcarea").css('background',CLINICAL_COLORS.sidebar_bg);
-    $("#calcarea *").css('background',CLINICAL_COLORS.sidebar_bg);
     $("#calcarea *").css('color',CLINICAL_COLORS.text_color);
     $(".settings_area").css('background',CLINICAL_COLORS.bg);
     $("#data-area").css('background',CLINICAL_COLORS.bg);
+    $("#collapsingleftsidebar").css('background',CLINICAL_COLORS.sidebar_bg);
+    $("#leftsidebar").css('color',CLINICAL_COLORS.text_color);
   } else {
     $(".engineering_only").show();
     $("#calcarea").css('background',ENGINEERING_COLORS.sidebar_bg);
@@ -1589,5 +1591,7 @@ function change_clinical() {
     $(".settings_area").css('background',ENGINEERING_COLORS.bg);
     $("#data-area").css('background',ENGINEERING_COLORS.bg);
 
+
   }
 }
+
