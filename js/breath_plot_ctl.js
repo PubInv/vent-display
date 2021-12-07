@@ -32,7 +32,7 @@ CLINICAL_COLORS = {
   pressure: "green",
   flow: "yellow",
   text_color: "yellow",
-  border: "white",
+  
 }
 ENGINEERING_COLORS = {
   bg: "white",
@@ -1594,4 +1594,3 @@ function change_clinical() {
 
   }
 }
-
