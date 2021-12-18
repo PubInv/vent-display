@@ -138,11 +138,35 @@ input:checked + .slider:before {
     padding: 20px;
     margin: 10px;
     width: 10em;
+
 }
+
+.info {
+    display: flex;
+    flex-direction: row;
+    border: 2px solid;
+    padding: 20px;
+    margin: 10px;
+    width: 25%;
+    font-size: 150%;
+}
+
+.list {
+    list-style-type: none;
+    padding-left: 1em;
+}
+
 
 #setting_mode-value, #setting_pimax-value, #setting_TV-value, #setting_RR-value, #setting_IE-value, #setting_PEEP-value {
     font-size: 300%;
 }
+
+#clinical_label {
+    font-size: 140%;
+    text-align: center;
+}
+
+
 
 /*
 bg-cyan-300 border-2 border-solid border-red-300-contrast w-100% p-10 m-5 rounded-lg text-black
@@ -155,7 +179,7 @@ bg-cyan-300 border-2 border-solid border-red-300-contrast w-100% p-10 m-5 rounde
     justify-content: space-around;
     height: 20%;
     margin: 0 0.75rem 0 0.75rem;
-    padding: 10px;
+    padding: 1em 0 1em 1em;
 }
 
 #collapsingleftsidebar {
