@@ -1531,7 +1531,7 @@ customElements.define('observable-setter',
   });
 
   $("#setting_mode").click(() => openLeftHandModal("mode"));
-  $("#setting_pimax").click(() => openLeftHandModal("pimax"));
+  //$("#setting_pimax").click(() => openLeftHandModal("pimax"));
   $("#setting_TV").click(() => openLeftHandModal("TV"));
   $("#setting_RR").click(() => openLeftHandModal("RR"));
   $("#setting_IE").click(() => openLeftHandModal("IE"));
@@ -1543,39 +1543,60 @@ customElements.define('observable-setter',
     $("#setting_mode-value").text(v);
     closeLeftHandModal();
   });
- $("#controllable-pimax-dismiss").click(() => {
-    const v = $("#controllable-pimax").val();
-    sendOnePIRCS("P",v*10);
-    $("#setting_pimax-value").text(v);
-    closeLeftHandModal();
-  });
-  $("#controllable-TV-dismiss").click(() => {
-    const v = $("#controllable-TV").val();
-    sendOnePIRCS("V",v);
-    $("#setting_TV-value").text(v);
-    closeLeftHandModal();
-  });
-  $("#controllable-RR-dismiss").click(() => {
-    const v = $("#controllable-RR").val();
-    sendOnePIRCS("B",v*10);
-    $("#setting_RR-value").text(v);
-    closeLeftHandModal();
-  });
-  $("#controllable-IE-dismiss").click(() => {
-    const v = $("#controllable-IE").val();
-    sendOnePIRCS("I",v);
-    $("#setting_IE-value").text(v);
-    closeLeftHandModal();
-  });
-  $("#controllable-PEEP-dismiss").click(() => {
-    const v = $("#controllable-PEEP").val();
-    sendOnePIRCS("E",v*10);
-    $("#setting_PEEP-value").text(v);
-    closeLeftHandModal();
-  });
+ //$("#controllable-pimax-dismiss").click(() => {
+    //const v = $("#controllable-pimax").val();
+    //sendOnePIRCS("P",v*10);
+    //$("#setting_pimax-value").text(v);
+    //closeLeftHandModal();
+  //});
 
+    $("#setting_pimax-value").change(() => {
+        const v = $('#setting_pimax-value').val();
+        sendOnePIRCS("P", v*10);
+    })
+  //$("#controllable-TV-dismiss").click(() => {
+    //const v = $("#controllable-TV").val();
+    //sendOnePIRCS("V",v);
+    //$("#setting_TV-value").text(v);
+    //closeLeftHandModal();
+  //});
+    $("#setting_TV-value").change(() => {
+        const v = $('#setting_TV-value').val();
+        sendOnePIRCS("V", v);
+    })
+  //$("#controllable-RR-dismiss").click(() => {
+    //const v = $("#controllable-RR").val();
+    //sendOnePIRCS("B",v*10);
+    //$("#setting_RR-value").text(v);
+    //closeLeftHandModal();
+  //});
+    $("#setting_RR-value").change(() => {
+        const v = $('#setting_RR-value').val();
+        sendOnePIRCS("B", v*10);
+    })
+  //$("#controllable-IE-dismiss").click(() => {
+    //const v = $("#controllable-IE").val();
+    //sendOnePIRCS("I",v);
+    //$("#setting_IE-value").text(v);
+    //closeLeftHandModal();
+  //});
+    $("#setting_IE-value").change(() => {
+        const v = $('#setting_IE-value').val();
+        sendOnePIRCS("I", v);
+    })
+  //$("#controllable-PEEP-dismiss").click(() => {
+    //const v = $("#controllable-PEEP").val();
+    //sendOnePIRCS("E",v*10);
+    //$("#setting_PEEP-value").text(v);
+    //closeLeftHandModal();
+  //});
+    $("#setting_PEEP-value").change(() => {
+        const v = $('#setting_PEEP-value').val();
+        sendOnePIRCS("E", v*10);
+    })
   closeLeftHandModal();
 });
+
 
 function change_clinical() {
   if ($("#clinical_display").is(":checked")) {

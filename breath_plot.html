@@ -411,6 +411,7 @@ Breath Plot: COVID-19 Respiration Analysis Software
     </div> <!-- end main area -->
 </div>
 <div class="flex settings_area">
+
   <button id="setting_mode" class="settings_button">
     Mode<br></br>
     <div class="setting_value">
@@ -419,46 +420,46 @@ Breath Plot: COVID-19 Respiration Analysis Software
       </div>
     </div>
   </button>
-  <button id="setting_pimax" class="settings_button">
-  Pimax<br></br>
+    <label class="settings_button" for="setting_pimax-value">
   <div class="setting_value">
     <div class="setting">
-        <label id="setting_pimax-value"> 35.7 </label>
+        Pimax <br><br>
+        <input id="setting_pimax-value" class="setting_input-value" value="35.7">
     </div>
   </div>
-</button>
-  <button id="setting_TV" class="settings_button">
-    TV<br></br>
+    </label>
+  <label for="setting_TV-value" class="settings_button">
     <div class="setting_value">
       <div class="setting">
-        <label id="setting_TV-value"> 35.7 </label>
+          TV<br></br>
+        <input class="setting_input-value" id="setting_TV-value" value="35.7">
       </div>
     </div>
-  </button>
-  <button id="setting_RR" class="settings_button">
-    RR<br></br>
+  </label>
+  <label for="setting_RR-value" class="settings_button">
     <div class="setting_value">
       <div class="setting">
-        <label id="setting_RR-value"> 35.7 </label>
+          RR<br></br>
+        <input class="setting_input-value" id="setting_RR-value" value="35.7">
       </div>
     </div>
-  </button>
-  <button id="setting_IE"  class="settings_button">
-    IE<br></br>
+  </label>
+  <label for="setting_IE-value" class="settings_button">
     <div class="setting_value">
       <div class="setting">
-        <label id="setting_IE-value"> 35.7 </label>
+          IE<br><br>
+        <input class="setting_input-value" id="setting_IE-value" value="35.7">
       </div>
     </div>
-  </button>
-  <button id="setting_PEEP"  class="settings_button">
-    PEEP<br></br>
+  </label>
+  <label for="setting_PEEP-value"  class="settings_button">
     <div class="setting_value">
       <div class="setting">
-        <label id="setting_PEEP-value"> 35.7 </label>
+          PEEP<br><br>
+        <input class="setting_input-value" id="setting_PEEP-value" value="35.7">
       </div>
     </div>
-  </button>
+  </label>
 
 <label for="clinical_display">
 <div class="settings_button">
@@ -480,9 +481,9 @@ Breath Plot: COVID-19 Respiration Analysis Software
 
     <div class="info">
     <ul class="list">
-        <li class="items">Name: Paulino Ramirez</li>
+        <li class="items" id="name">Name: Paulino Ramirez</li>
         <br>
-        <li class="items">Ventilator ID: 12345</li>
+        <li class="items" id="id">Ventilator ID: 12345</li>
     </ul>
 
 <div>
@@ -606,5 +607,6 @@ Breath Plot: COVID-19 Respiration Analysis Software
 <script src='js/respiration_math.js'></script>
 <script src='js/PIRDS_utilities.js'></script>
 <script src='js/breath_plot_ctl.js'></script>
+
 
 </body>
