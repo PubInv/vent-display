@@ -54,3 +54,5 @@ example of composability of the PubInv Respireco system.
 
 This is a project with a rich set of features that need to be added involving respiration calculations.
 Additionally, there are GUI features such as the ability to scroll back in time that need to be added. Please contact <read.robert@gmail.com> if you would like to volunteer.
+
+Emmaculate Sitengile is voluteering for this project. 
