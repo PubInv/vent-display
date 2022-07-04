@@ -161,13 +161,13 @@ Breath Plot: COVID-19 Respiration Analysis Software
           </div>
           <input type="text" class="form-control" id="dserverurl" aria-describedby="basic-addon3">
           <div class="input-group-append">
-            <span>
-              <label for="livetoggle  livecon">Use VentOS API</label>
-              <label class="switch  livecon">
-                <input type="checkbox" id="simulation" checked>
-                <span class="slider round"></span>
-              </label>
-            </span>
+              <span>
+                  <label for="livetoggle  livecon">Use VentOS API</label>
+                  <label class="switch  livecon">
+                  <input type="checkbox" id="simulation" checked>
+                  <span class="slider round"></span>
+                  </label>
+              </span>
 
             <a class="btn btn-outline-dark btn-sm" href="#" role="button" id="useofficial">Use Ventmon Data Lake: ventmon.coslabs.com</a>
           </div>
@@ -290,8 +290,28 @@ Breath Plot: COVID-19 Respiration Analysis Software
             </observable-setter>
             <div id="mode-setter" class="controllable-setter">
                 <label for="controllable-mode">Mode:</label>
-                <input id="controllable-mode" type='text'>
-                <button id="controllable-mode-dismiss" type='button'>dismiss</input>
+                <br />
+
+                <input type="text" placeholder="Enter Value"></input>
+                <span>
+                    <label for="livetoggle  livecon" style="font-size: 20px; float: left;">--PCV------VCV--</label>
+                    <label class="switch  livecon">
+                        <input type="checkbox" id="simulation" checked>
+                        <span class="slider round" style="height:35px;"></span>
+                    </label>
+                </span>
+             
+                <span>
+                    <label for="livetoggle  livecon" style="font-size: 20px; margin-top: 200px;"></label>
+                    <label class="switch  livecon">
+                        <input type="checkbox" id="simulation" checked>
+                        <span class="slider round" style="height:35px"></span>
+                    </label>
+                </span>
+
+                <!-- <label for="dcv" style="font-size: 15px;">DCV</label>
+     <input id="controllable-mode" type='text'>-->
+                <button id="controllable-mode-dismiss" type='button'>Done</input>
             </div>
             <div id="pimax-setter" class="controllable-setter">
                 <label for="controllable-pimax">PIMAX:</label>
