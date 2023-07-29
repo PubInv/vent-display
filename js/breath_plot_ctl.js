@@ -23,24 +23,42 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 var MAX_SAMPLES_TO_STORE_S = 2000;
 
-const SMALL_HEIGHT = 500;
-const LARGE_HEIGHT = 800;
+const SMALL_HEIGHT = 300;
+const LARGE_HEIGHT = 400;
 
 CLINICAL_COLORS = {
   bg: "black",
+  calc_bg: "black",
+  calc_bg_img: "black",
   sidebar_bg: "black",
+  btn_shadow: "black",
+  btn_text: "yellow",
+  btn_border: "1px solid yellow",
   pressure: "green",
   flow: "yellow",
+  slider_shadow:"inset 0 0 5px yellow",
+  slider_border: "1px solid yellow",
   text_color: "yellow",
 }
+
 ENGINEERING_COLORS = {
   bg: "white",
-  sidebar_bg: "AliceBlue",
-  pressure: "red",
-  flow: "blue",
-  text_color: "black",
+  slider_on: "#878787",
+  input_bg: "#e9ecef",
+  input_border: "1px solid #ced4da",
+  slider_bg:"#878787",
+  slider_shadow:"inset 0 0 5px #535353",
+  slider_border: "none",
+  calc_bg: "#d1e2ff",
+  calc_bg_img: "radial-gradient(100% 100% at 100% 0, #b4bcff00 0, #e6f0ff 100%)",
+  sidebar_bg: "#ffffff00",
+  btn_shadow: "rgba(45, 35, 66, .4) 0 2px 4px, rgba(45, 35, 66, .3) 0 7px 13px -3px, rgba(58, 65, 111, .5) 0 -3px 0 inset;",
+  btn_text: "#404040",
+  btn_border: "0",
+  pressure: "#e54e24",
+  flow: "#1e59e6",
+  text_color: "#404040",
 }
-
 
 // I want a function to print times without milliseconds!!!!
 
@@ -259,6 +277,14 @@ function plot_clinical(samples,transistions,breaths) {
       // Here I attempt to match Paulino's style
       plot_bgcolor: CLINICAL_COLORS.bg,
       paper_bgcolor : CLINICAL_COLORS.bg,
+      margin: {
+        t:0,
+        l:50,
+        r:0,
+        b:50},
+      font: {
+        family: 'Helvetica'
+      },
       showlegend: false,
 
       xaxis: {domain: [0.0,1.0],
@@ -592,8 +618,16 @@ function plot_engineering(samples, trans, breaths) {
     // in faintly to make the graphs match
 
     var event_layout = {
-      title: SEVENINCHEL14TS ? '' : 'Events',
+      // title: SEVENINCHEL14TS ? '' : 'Events',
       showlegend: false,
+      margin: {
+        t:0,
+        l:50,
+        r:0,
+        b:50},
+      font: {
+        family: 'Helvetica'
+      },
       height: SEVENINCHEL14TS ? SMALL_HEIGHT : LARGE_HEIGHT,
       xaxis: {domain: [0.0,1.0]},
       yaxis: {
@@ -607,10 +641,16 @@ function plot_engineering(samples, trans, breaths) {
 
   var maxseconds = Math.ceil(total_seconds);
     var layout = {
-      title: SEVENINCHEL14TS ? '' : 'VentMon Breath Analysis',
       height: SEVENINCHEL14TS ? SMALL_HEIGHT : LARGE_HEIGHT,
       showlegend: false,
-
+      margin: {
+        t:0,
+        l:50,
+        r:0,
+        b:50},
+      font: {
+        family: 'Helvetica'
+      },
       xaxis: {domain: [0.0,1.0],
               range : [0,maxseconds]},
       yaxis: {
@@ -837,9 +877,9 @@ function compute_and_render_observations(samples,transitions,breaths) {
   var [min,avg,max,palarms] = compute_pressures(RESPIRATION_RATE_WINDOW_SECONDS,samples,alarms,LIMITS);
   alarms = alarms.concat(palarms);
 
-  $("#pipmax span:nth-child(2)").text(max.toFixed(1))
+  // $("#pipmax span:nth-child(2)").text(max.toFixed(1))
   $("#pipavg span:nth-child(2)").text(avg.toFixed(1))
-  $("#pipmin span:nth-child(2)").text(min.toFixed(1))
+  // $("#pipmin span:nth-child(2)").text(min.toFixed(1))
 
 
   var fio2 = compute_fio2_mean(RESPIRATION_RATE_WINDOW_SECONDS,samples);
@@ -858,7 +898,7 @@ function compute_and_render_observations(samples,transitions,breaths) {
 //    var messages = samples.filter(s => s.event == 'E' && s.type == 'C');
     // if our traces don't have monotone ms fields, this is an
     // unrecoverable error...
-    var cur = 0;
+    var cur = 0;f
     for(var i = 0; i < samples.length; i++) {
       if (samples[i].ms <= 0) { // This is an error!!!
         console.log("error, non-monotonic ms times");
@@ -1218,14 +1258,23 @@ var CONTROL_SETTINGS = { mode: "PCV",
         // Often this means multiplying the
         // common medical units by 10 to be the
         // PIRCS units.
+
         var dict = {
           M: $("#control-mode").val(),
-          B: $("#control-rr").val()*10,
-          I: $("#control-ie").val(),
-          V: $("#control-vinsp").val(),
-          P: $("#control-pinsp").val()*10,
-          E: $("#control-peep").val()*10,
+          B: $("#pmax-slider").data("roundSlider").getValue()*10,
+          I: $("#tv-slider").data("roundSlider").getValue(),
+          V: $("#rr-slider").data("roundSlider").getValue(),
+          P: $("#ie-slider").data("roundSlider").getValue()*10,
+          E: $("#peep-slider").data("roundSlider").getValue(),
         }
+        console.log(dict);
+        
+
+        $("#bpm").text($("#rr-slider").data("roundSlider").getValue());
+        $("#tidalvolume").text($("#tv-slider").data("roundSlider").getValue());
+        $("#pipmax").text($("#pmax-slider").data("roundSlider").getValue());
+        $("#inhalationtoexhalation").text($("#ie-slider").data("roundSlider").getValue());
+        $("#pipmin").text($("#peep-slider").data("roundSlider").getValue());
 
         function sleep(ms) {
           return new Promise(resolve => setTimeout(resolve, ms));
@@ -1575,19 +1624,172 @@ customElements.define('observable-setter',
 function change_clinical() {
   if ($("#clinical_display").is(":checked")) {
     $(".engineering_only").hide();
-    $("#calcarea").css('background',CLINICAL_COLORS.sidebar_bg);
-    $("#calcarea *").css('background',CLINICAL_COLORS.sidebar_bg);
+    $("body").css('background-color',CLINICAL_COLORS.bg);
+    $("body").css('color',CLINICAL_COLORS.btn_text);
+    $(".input-group-text").css('background-color',CLINICAL_COLORS.bg);
+    $(".input-group-text").css('color',CLINICAL_COLORS.btn_text);
+    $(".input-group-text").css('border',CLINICAL_COLORS.btn_border);
+    $(".top-input-bar").css('background-color',CLINICAL_COLORS.bg);
+    $(".top-input-bar").css('border',CLINICAL_COLORS.btn_border);
+    $(".top-input-bar").css('color',CLINICAL_COLORS.btn_text);
+    $("#timetop").css('border',CLINICAL_COLORS.btn_border);
+    $("#timetop").css('background-color',CLINICAL_COLORS.bg);
+    $(".alert-info").css('color',CLINICAL_COLORS.btn_text);
+    $("#calcarea").css('background',CLINICAL_COLORS.calc_bg);
+    $("#calcarea").css('background-image',CLINICAL_COLORS.calc_bg_img);
     $("#calcarea *").css('color',CLINICAL_COLORS.text_color);
     $(".settings_area").css('background',CLINICAL_COLORS.bg);
+    $(".settings_button").css('background',CLINICAL_COLORS.calc_bg);
+    $(".settings_button").css('background-image',CLINICAL_COLORS.calc_bg_img);
+    $(".settings_button").css('box-shadow',CLINICAL_COLORS.btn_shadow);
+    $(".settings_button").css('border',CLINICAL_COLORS.btn_border);
+    $(".settings_button").css('color',CLINICAL_COLORS.btn_text);
+    $(".btn-primary").css('background',CLINICAL_COLORS.calc_bg);
+    $(".btn-primary").css('background-image',CLINICAL_COLORS.calc_bg_img);
+    $(".btn-primary").css('box-shadow',CLINICAL_COLORS.btn_shadow);
+    $(".btn-primary").css('border',CLINICAL_COLORS.btn_border);
+    $(".btn-primary").css('color',CLINICAL_COLORS.btn_text);
+    $(".slider").css('background',CLINICAL_COLORS.calc_bg);
+    $(".slider").css('shadow',CLINICAL_COLORS.slider_shadow);
+    $("input:checked+.slider").css('background',CLINICAL_COLORS.btn_text);
+    $("input:checked+.slider").css('background-image',CLINICAL_COLORS.btn_text);
     $("#data-area").css('background',CLINICAL_COLORS.bg);
   } else {
     $(".engineering_only").show();
-    $("#calcarea").css('background',ENGINEERING_COLORS.sidebar_bg);
-    $("#calcarea *").css('background',ENGINEERING_COLORS.sidebar_bg);
+    $("body").css('background-color',ENGINEERING_COLORS.bg);
+    $("body").css('color',ENGINEERING_COLORS.btn_text);    
+    $("#calcarea").css('background',ENGINEERING_COLORS.calc_bg);
+    $(".input-group-text").css('background-color',ENGINEERING_COLORS.input_bg);
+    $(".input-group-text").css('border',ENGINEERING_COLORS.input_border);
+    $(".input-group-text").css('color',ENGINEERING_COLORS.btn_text);
+    $(".top-input-bar").css('background-color',ENGINEERING_COLORS.bg);
+    $(".top-input-bar").css('border',ENGINEERING_COLORS.input_border);
+    $(".top-input-bar").css('color',ENGINEERING_COLORS.btn_text);
+    $("#timetop").css('background-color',ENGINEERING_COLORS.input_bg);
+    $("#timetop").css('border',ENGINEERING_COLORS.input_border);
+    $(".alert-info").css('color',ENGINEERING_COLORS.btn_text);
+    $("#calcarea").css('background-image',ENGINEERING_COLORS.calc_bg_img);    
     $("#calcarea *").css('color',ENGINEERING_COLORS.text_color);
-
     $(".settings_area").css('background',ENGINEERING_COLORS.bg);
+    $(".settings_button").css('background',ENGINEERING_COLORS.calc_bg);
+    $(".settings_button").css('background-image',ENGINEERING_COLORS.calc_bg_img);
+    $(".settings_button").css('box-shadow',ENGINEERING_COLORS.btn_shadow);
+    $(".settings_button").css('border',ENGINEERING_COLORS.btn_border);
+    $(".settings_button").css('color',ENGINEERING_COLORS.btn_text);
+    $(".btn-primary").css('background',ENGINEERING_COLORS.calc_bg);
+    $(".btn-primary").css('background-image',ENGINEERING_COLORS.calc_bg_img);
+    $(".btn-primary").css('box-shadow',ENGINEERING_COLORS.btn_shadow);
+    $(".btn-primary").css('border',ENGINEERING_COLORS.btn_border);
+    $(".btn-primary").css('color',ENGINEERING_COLORS.btn_text);
+    $(".slider").css('shadow',ENGINEERING_COLORS.slider_shadow);
+    $(".slider").css('background',ENGINEERING_COLORS.slider_bg);
+    $("input:checked+.slider").css('background',ENGINEERING_COLORS.calc_bg);
+    $("input:checked+.slider").css('background-image',ENGINEERING_COLORS.calc_bg_img);
     $("#data-area").css('background',ENGINEERING_COLORS.bg);
 
   }
 }
+
+window.traceEvent = async function(event) {
+  console.log("CHANGE EVENT!!!!");
+  var dict = {
+    M: $("#control-mode").val(),
+    B: $("#rr-slider").data("roundSlider").getValue()*10,
+    I: $("#ie-slider").data("roundSlider").getValue()*10,
+    V: $("#tv-slider").data("roundSlider").getValue(),
+    P: $("#pmax-slider").data("roundSlider").getValue()*10,
+    E: $("#peep-slider").data("roundSlider").getValue(),
+  }
+
+  $("#bpm").text($("#rr-slider").data("roundSlider").getValue());
+  $("#tidalvolume").text($("#tv-slider").data("roundSlider").getValue());
+  $("#pipmax").text($("#pmax-slider").data("roundSlider").getValue());
+  $("#inhalationtoexhalation").text($("#ie-slider").data("roundSlider").getValue());
+  $("#pipmin").text($("#peep-slider").data("roundSlider").getValue());
+  console.log(dict);
+
+  // function sleep(ms) {
+  //   return new Promise(resolve => setTimeout(resolve, ms));
+  // }
+
+  for (var k in dict){
+    // WARNING!!!!
+    // This is a workaround because we can easily create
+    // buffer overruns on the serial port of the an ESP32
+    // or Arduino. This really needs to be addressed in
+    // our Node Server, AND also made more robust in VentOS.
+    // await sleep(500);
+    sendOnePIRCS(k,dict[k]);
+  }
+}
+
+$("#pmax-slider").roundSlider({
+  sliderType: "min-range",
+  circleShape: "pie",
+  startAngle: "315",
+  min: 0,
+  max: 80,
+  pathColor: ENGINEERING_COLORS.calc_bg,
+  startValue: 40,
+  svgMode: true,
+  lineCap: "round",
+  change: "traceEvent",
+  drag: "traceEvent"
+});
+
+$("#tv-slider").roundSlider({
+  sliderType: "min-range",
+  circleShape: "pie",
+  startAngle: "315",
+  min: 5,
+  max: 80,
+  pathColor: ENGINEERING_COLORS.calc_bg,
+  startValue: 35,
+  svgMode: true,
+  lineCap: "round",
+  change: "traceEvent",
+  drag: "traceEvent"
+});
+
+$("#rr-slider").roundSlider({
+  sliderType: "min-range",
+  circleShape: "pie",
+  startAngle: "315",
+  min: 3,
+  max: 60,
+  pathColor: ENGINEERING_COLORS.calc_bg,
+  startValue: 28,
+  svgMode: true,
+  lineCap: "round",
+  change: "traceEvent",
+  drag: "traceEvent"
+});
+
+$("#ie-slider").roundSlider({
+  sliderType: "min-range",
+  circleShape: "pie",
+  startAngle: "315",
+  min: 2,
+  max: .1,
+  pathColor: ENGINEERING_COLORS.calc_bg,
+  step:.1,
+  startValue: 1,
+  svgMode: true,
+  lineCap: "round",
+  change: "traceEvent",
+  drag: "traceEvent"
+});
+
+$("#peep-slider").roundSlider({
+  sliderType: "min-range",
+  circleShape: "pie",
+  startAngle: "315",
+  min: 0,
+  max: 20,
+  pathColor: ENGINEERING_COLORS.calc_bg,
+  startValue: 10,
+  svgMode: true,
+  lineCap: "round",
+  change: "traceEvent",
+  drag: "traceEvent"
+});
