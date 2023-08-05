@@ -173,7 +173,7 @@ button {
   height: 30px !important;
   border: 0;
   border-radius: var(--border-rad) !important;
-  box-shadow: rgba(45, 35, 66, .2) 0 2px 4px, rgba(45, 35, 66, .2) 0 7px 13px -3px, rgb(58 65 111 / 15%) 0 -1.5px 0 inset;
+  box-shadow: rgba(45, 35, 66, .1) 0 2px 4px, rgba(45, 35, 66, .1) 0 7px 13px -3px, rgb(58 65 111 / 1%) 0 -1.5px 0 inset;
   transition: box-shadow .25s, transform .25s;
 }
 
@@ -188,7 +188,7 @@ button {
   transform: translateY(-0.5px);
   background: var(--section-bg);
   background-image: var(--section-bg-im);
-  box-shadow: rgba(45, 35, 66, .2) 0 2px 4px, rgba(45, 35, 66, .2) 0 7px 13px -3px, rgb(58 65 111 / 15%) 0 -1.5px 0 inset, inset 0 0 5px #99a6ff6e;
+  box-shadow: rgba(45, 35, 66, .1) 0 2px 4px, rgba(45, 35, 66, .1) 0 7px 13px -3px, rgb(58 65 111 / 10%) 0 -1.5px 0 inset, inset 0 0 5px #99a6ff6e;
 }
 
 .btn-primary:active {
