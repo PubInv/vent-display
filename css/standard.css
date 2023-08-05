@@ -413,7 +413,7 @@ input:checked+.slider:before {
 .vertical_alarms {font-size: 12px; line-height: 1;}
 .limit {display: flex;flex-direction: row;}
 .limit  label {width: 1em;}
-.alarmred {color: #d9001a; font-weight: 600;}
+/* .alarmred {color: #d9001a; font-weight: 600;} */
 
 /* MODE VERTICAL TOGGLE ---------------------------------------------------------------------------------------------------------------------------------------------- */
 
