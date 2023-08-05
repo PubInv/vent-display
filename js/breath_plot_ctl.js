@@ -60,6 +60,7 @@ ENGINEERING_COLORS = {
   text_color: "#404040",
 }
 
+
 // I want a function to print times without milliseconds!!!!
 
 if (!Date.prototype.toISOStringSeconds) {
@@ -877,9 +878,9 @@ function compute_and_render_observations(samples,transitions,breaths) {
   var [min,avg,max,palarms] = compute_pressures(RESPIRATION_RATE_WINDOW_SECONDS,samples,alarms,LIMITS);
   alarms = alarms.concat(palarms);
 
-  // $("#pipmax span:nth-child(2)").text(max.toFixed(1))
+  $("#pipmax span:nth-child(2)").text(max.toFixed(1))
   $("#pipavg span:nth-child(2)").text(avg.toFixed(1))
-  // $("#pipmin span:nth-child(2)").text(min.toFixed(1))
+  $("#pipmin span:nth-child(2)").text(min.toFixed(1))
 
 
   var fio2 = compute_fio2_mean(RESPIRATION_RATE_WINDOW_SECONDS,samples);
@@ -898,7 +899,7 @@ function compute_and_render_observations(samples,transitions,breaths) {
 //    var messages = samples.filter(s => s.event == 'E' && s.type == 'C');
     // if our traces don't have monotone ms fields, this is an
     // unrecoverable error...
-    var cur = 0;f
+    var cur = 0;
     for(var i = 0; i < samples.length; i++) {
       if (samples[i].ms <= 0) { // This is an error!!!
         console.log("error, non-monotonic ms times");
@@ -1258,18 +1259,15 @@ var CONTROL_SETTINGS = { mode: "PCV",
         // Often this means multiplying the
         // common medical units by 10 to be the
         // PIRCS units.
-
         var dict = {
           M: $("#control-mode").val(),
-          B: $("#pmax-slider").data("roundSlider").getValue()*10,
-          I: $("#tv-slider").data("roundSlider").getValue(),
-          V: $("#rr-slider").data("roundSlider").getValue(),
-          P: $("#ie-slider").data("roundSlider").getValue()*10,
+          B: $("#rr-slider").data("roundSlider").getValue()*10,
+          I: 1/$("#ie-slider").data("roundSlider").getValue()*10,
+          V: $("#tv-slider").data("roundSlider").getValue(),
+          P: $("#pmax-slider").data("roundSlider").getValue()*10,
           E: $("#peep-slider").data("roundSlider").getValue(),
         }
-        console.log(dict);
-        
-
+      
         $("#bpm").text($("#rr-slider").data("roundSlider").getValue());
         $("#tidalvolume").text($("#tv-slider").data("roundSlider").getValue());
         $("#pipmax").text($("#pmax-slider").data("roundSlider").getValue());
@@ -1407,173 +1405,11 @@ $( document ).ready(function() {
   $("#60s_btn").click(handle_timing_button);
   $("#180s_btn").click(handle_timing_button);
   $("#300s_btn").click(handle_timing_button);
-
-
-
   $("#livetoggle").prop("checked",true);
   $("#clinical_display").prop("checked",false);
   $("#clinical_display").change(change_clinical);
 
 console.dir("SEVENINCHEL14TS",SEVENINCHEL14TS);
-
-
-  // We need to get the id out of this, which for a general
-  // purpose mouse click can be a problem. However, I believe
-  // we can search the "e.path" array, which will always have
-  // "observable-x#id" in it, from which we can extract the id,
-  // in order to know what values to set on the return.
-  // We need this to get an id in the "LIMITS" arrange for
-  // us to know what to set. I can think of no other way than
-  // to do a reverse map; with the idea, we can a verison
-  // of "keypress to this function" which will set the value.
-  // NOTE: But I now believe this can all be done better by designing
-  // the features in HTML and then "showing" only the one we want,
-  // which will let us use an id more reasonably.
-  function add_high_low_input_to_sidebar(e) {
-
-    console.log("id:",e.currentTarget.host.id);
-    const id = e.currentTarget.host.id;
-//    const limit_key = lookup_limit_key_by_element_id(id);
-    openLeftHandModal(id);
-
-  }
-//let template = document.getElementById('observablex');
-//let templateContent = template.content;
-//document.body.appendChild(templateContent);
-
-  let customElements = window.customElements;
-
-customElements.define('observable-x',
-  class extends HTMLElement {
-    constructor() {
-      super();
-      let template = document.getElementById('observable-xx');
-      let templateContent = template.content;
-
-      const shadowRoot = this.attachShadow({mode: 'open'})
-        .appendChild(templateContent.cloneNode(true));
-    }
-    connectedCallback(){
-      this.shadowRoot.addEventListener("click", function (e) {
-        console.log('listend to check event');
-        console.log(e);
-        // What we really want to do here is to fill the sidebar
-        // with effectively a dismissible modal which gets the
-        // high and low values. This pretty much has to be
-        // appended to the "#leftsidebar" element, in the dom,
-        // because we must be free to place other things there.
-        // Some how we have to use our identity from e!
-        add_high_low_input_to_sidebar(e);
-      });
-    }
-  }
-                     );
-
-  function elementIdToLIMITSKey(id) {
-    switch (id) {
-    case "pipmax":
-      return "max";
-    case "pipavg":
-      return "avg";
-    case "pipmin":
-      return "min";
-    case "mv":
-      return "mv";
-    case "bpm":
-      return "bpm";
-    case "inhalationtoexhalation":
-      return "ier";
-    case "tidalvolume":
-      return "tv";
-    case "fioxygen2":
-      return "fio2";
-    case "timeacheiveip":
-      return "taip";
-    case "timereleaseinspiratorypressure":
-      return "trip";
-    case "workofbreathing":
-      return "wob";
-    default:
-      console.error("internal error!");
-    }
-  }
-
-  function closeLeftHandModalOnReturn(ed) {
-    if(ed.which == 13) {
-      closeLeftHandModal();
-    }
-  }
-  function closeLeftHandModal() {
-    // observable-setter is a template,
-    // but controllable-setter is a class
-    $("observable-setter").hide();
-    $(".controllable-setter").hide();
-    $("#leftsidebar").hide();
-  }
-  function openLeftHandModal(id) {
-    // We want to remove anything else which is present
-    closeLeftHandModal();
-    $("#leftsidebar").show();
-    $("#"+ id + "-setter").show();
-  }
-  function getHighFromObservableSetterShadowRoot(sr) {
-    const limits = sr.children[1].children[1];
-    const highdiv = limits.children[0];
-    const high = highdiv.children[2];
-    return high;
-  }
-  function getLowFromObservableSetterShadowRoot(sr) {
-    const limits = sr.children[1].children[1];
-    const lowdiv = limits.children[1];
-    const low = lowdiv.children[2];
-    return low;
-  }
-  function setLimitFromObservableHigh(id,ed) {
-    const jqel = $("#"+id)[0];
-    const high = getHighFromObservableSetterShadowRoot(jqel.shadowRoot);
-    const setterName = id.split("-")[0];
-    console.log("setterName",setterName);
-    const key = elementIdToLIMITSKey(setterName);
-    LIMITS[key].h = parseInt(high.value);
-    $("#" + setterName +" span:nth-child(3)").text(LIMITS[key].h);
-  }
-  function setLimitFromObservableLow(id,ed) {
-    const jqel = $("#"+id)[0];
-    const low = getLowFromObservableSetterShadowRoot(jqel.shadowRoot);
-    const setterName = id.split("-")[0];
-    const key = elementIdToLIMITSKey(setterName);
-    LIMITS[key].l = parseInt(low.value);
-    $("#" + setterName +" span:nth-child(4)").text(LIMITS[key].l);
-  }
-customElements.define('observable-setter',
-  class extends HTMLElement {
-    constructor() {
-      super();
-      let template = document.getElementById('observable-setter-xx');
-      let templateContent = template.content;
-      const shadowRoot = this.attachShadow({mode: 'open'})
-            .appendChild(templateContent.cloneNode(true));
-    }
-    connectedCallback(){
-      this.shadowRoot.addEventListener("keypress",
-                                       closeLeftHandModalOnReturn
-                                      );
-
-      const id = this.id;
-      console.log(id);
-      console.log("sr",this.shadowRoot);
-      const limits = this.shadowRoot.children[1].children[1];
-      const highdiv = limits.children[0];
-      const lowdiv = limits.children[1];
-      const high = highdiv.children[2];
-      const low = lowdiv.children[2];
-      console.log("high",high);
-      console.log("low",low);
-      high.addEventListener("input", (ed) => setLimitFromObservableHigh(id,ed) );
-      low.addEventListener("input", (ed) => setLimitFromObservableLow(id,ed) );
-    }
-  });
-
   $("#setting_mode").click(() => openLeftHandModal("mode"));
   $("#setting_pimax").click(() => openLeftHandModal("pimax"));
   $("#setting_TV").click(() => openLeftHandModal("TV"));
@@ -1623,6 +1459,7 @@ customElements.define('observable-setter',
 
 function change_clinical() {
   if ($("#clinical_display").is(":checked")) {
+    $("#peep-slider").roundSlider.pathColor = CLINICAL_COLORS.bg;
     $(".engineering_only").hide();
     $("body").css('background-color',CLINICAL_COLORS.bg);
     $("body").css('color',CLINICAL_COLORS.btn_text);
@@ -1638,6 +1475,7 @@ function change_clinical() {
     $("#calcarea").css('background',CLINICAL_COLORS.calc_bg);
     $("#calcarea").css('background-image',CLINICAL_COLORS.calc_bg_img);
     $("#calcarea *").css('color',CLINICAL_COLORS.text_color);
+    $(".toggle-switch label").css('color',CLINICAL_COLORS.text_color);
     $(".settings_area").css('background',CLINICAL_COLORS.bg);
     $(".settings_button").css('background',CLINICAL_COLORS.calc_bg);
     $(".settings_button").css('background-image',CLINICAL_COLORS.calc_bg_img);
@@ -1670,6 +1508,7 @@ function change_clinical() {
     $(".alert-info").css('color',ENGINEERING_COLORS.btn_text);
     $("#calcarea").css('background-image',ENGINEERING_COLORS.calc_bg_img);    
     $("#calcarea *").css('color',ENGINEERING_COLORS.text_color);
+    $(".toggle-switch label").css('color',ENGINEERING_COLORS.text_color);
     $(".settings_area").css('background',ENGINEERING_COLORS.bg);
     $(".settings_button").css('background',ENGINEERING_COLORS.calc_bg);
     $(".settings_button").css('background-image',ENGINEERING_COLORS.calc_bg_img);
@@ -1686,16 +1525,89 @@ function change_clinical() {
     $("input:checked+.slider").css('background',ENGINEERING_COLORS.calc_bg);
     $("input:checked+.slider").css('background-image',ENGINEERING_COLORS.calc_bg_img);
     $("#data-area").css('background',ENGINEERING_COLORS.bg);
-
   }
+}
+
+document.querySelector('input[id="clinical_display"]').onclick = async function(event) {
+  change_clinical()
+}
+
+document.querySelector('input[id="toggle-a"]').onclick = async function(event) {
+  if (document.querySelector('input[id="toggle-a"]').checked) {
+   var dict = {
+    M: 0,
+    B: $("#rr-slider").data("roundSlider").getValue()*10,
+    I: 1/$("#ie-slider").data("roundSlider").getValue()*10,
+    V: $("#tv-slider").data("roundSlider").getValue(),
+    P: $("#pmax-slider").data("roundSlider").getValue()*10,
+    E: $("#peep-slider").data("roundSlider").getValue(),
+  }
+
+  $("#bpm").text($("#rr-slider").data("roundSlider").getValue());
+  $("#tidalvolume").text($("#tv-slider").data("roundSlider").getValue());
+  $("#pipmax").text($("#pmax-slider").data("roundSlider").getValue());
+  $("#inhalationtoexhalation").text($("#ie-slider").data("roundSlider").getValue());
+  $("#pipmin").text($("#peep-slider").data("roundSlider").getValue());
+  console.log("PCV");
+  console.log(dict);
+ }
+ for (var k in dict){
+  // WARNING!!!!
+  // This is a workaround because we can easily create
+  // buffer overruns on the serial port of the an ESP32
+  // or Arduino. This really needs to be addressed in
+  // our Node Server, AND also made more robust in VentOS.
+  // await sleep(500);
+  sendOnePIRCS(k,dict[k]);
+}
+}
+
+document.querySelector('input[id="toggle-b"]').onclick = async function(event) { 
+ if (document.querySelector('input[id="toggle-b"]').checked) {
+  var dict = {
+    M: 1,
+    B: $("#rr-slider").data("roundSlider").getValue()*10,
+    I: 1/$("#ie-slider").data("roundSlider").getValue()*10,
+    V: $("#tv-slider").data("roundSlider").getValue(),
+    P: $("#pmax-slider").data("roundSlider").getValue()*10,
+    E: $("#peep-slider").data("roundSlider").getValue(),
+  }
+
+  $("#bpm").text($("#rr-slider").data("roundSlider").getValue());
+  $("#tidalvolume").text($("#tv-slider").data("roundSlider").getValue());
+  $("#pipmax").text($("#pmax-slider").data("roundSlider").getValue());
+  $("#inhalationtoexhalation").text($("#ie-slider").data("roundSlider").getValue());
+  $("#pipmin").text($("#peep-slider").data("roundSlider").getValue());
+  console.log("VCV");
+  console.log(dict);
+ }
+ for (var k in dict){
+  // WARNING!!!!
+  // This is a workaround because we can easily create
+  // buffer overruns on the serial port of the an ESP32
+  // or Arduino. This really needs to be addressed in
+  // our Node Server, AND also made more robust in VentOS.
+  // await sleep(500);
+  sendOnePIRCS(k,dict[k]);
+}
 }
 
 window.traceEvent = async function(event) {
   console.log("CHANGE EVENT!!!!");
+  if (document.querySelector('input[id="toggle-a"]').checked) {
+    var mode = 0;
+    console.log("PCV");
+  }
+
+  if (document.querySelector('input[id="toggle-b"]').checked) {
+    var mode = 1;
+    console.log("VCV");
+  }
+
   var dict = {
-    M: $("#control-mode").val(),
+    M: mode,
     B: $("#rr-slider").data("roundSlider").getValue()*10,
-    I: $("#ie-slider").data("roundSlider").getValue()*10,
+    I: 1/$("#ie-slider").data("roundSlider").getValue()*10,
     V: $("#tv-slider").data("roundSlider").getValue(),
     P: $("#pmax-slider").data("roundSlider").getValue()*10,
     E: $("#peep-slider").data("roundSlider").getValue(),
