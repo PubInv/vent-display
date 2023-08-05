@@ -24,7 +24,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="css/bootstrap.css">
-    <linke rel="stylesheet" href="css/circular-slider.min.css">
     <link href="https://cdn.jsdelivr.net/gh/gitbrent/bootstrap4-toggle@3.6.1/css/bootstrap4-toggle.min.css" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="css/standard.css" media="screen"/>
     <title>Public Invention Respiration Analysis</title>
@@ -83,7 +82,7 @@
             </label>
             <label for="livetoggle  livecon" class="top-toggle-text">Use Clinical Display</label>
             <label class="switch  livecon">
-            <input type="checkbox" id="clinical_display" checked>
+            <input type="checkbox" id="clinical_display" unchecked>
             <span class="slider round"></span>
             </label>
           </div>
@@ -111,6 +110,17 @@
                 </div>
                 <!-- CIRCULAR SLIDERS -->
                 <div class="flex settings_area">
+                  <div class="toggle-switch-container">
+                    <div class="toggle-switch switch-vertical">
+                      <input id="toggle-a" type="radio" name="switch" checked="checked" />
+                      <label for="toggle-a">PCV</label>
+                      <input id="toggle-b" type="radio" name="switch" />
+                      <label for="toggle-b">VCV</label>
+                      <span class="toggle-outside">
+                        <span class="toggle-inside"></span>
+                      </span>
+                    </div>
+                  </div>
                   <div id="slider-row">
                     <div style="width:170px; margin-right:10px;">
                       <div id="pmax-slider"></div>
@@ -172,7 +182,7 @@
                   <div>
                     <p class="obs-title">PIP (max):</p>
                     <div style="display:flex; justify-content: space-between;">
-                      <p id="pipmax" class="obs-value" style="display:inline;">0</p>
+                      <p id="pipmax" class="obs-value" style="display:inline;">40</p>
                       <div style="display:inline; font-size:10px;">
                         <div style="display:block;">
                           <p style="display: inline;">H: </p>
@@ -188,15 +198,15 @@
                   <div class="engineering_only">
                     <p class="obs-title">P. Mean:</p>
                     <div style="display:flex; justify-content: space-between;">
-                      <p id="pipavg" class="obs-value" style="display:inline;">0</p>
+                      <p id="pipavg" class="obs-value" style="display:inline;">35</p>
                       <div style="display:inline; font-size:10px;">
                         <div style="display:block;">
                           <p style="display: inline;">H: </p>
-                          <div class="obs-max" style="display:inline;">40</div>
+                          <div class="obs-max" style="display:inline;">80</div>
                         </div>
                         <div style="display:inline;">
                           <p style="display: inline;">L: </p>
-                          <div class="obs-min" style="display:inline;">0</div>
+                          <div class="obs-min" style="display:inline;">5</div>
                         </div>
                       </div>
                     </div>
@@ -204,7 +214,7 @@
                   <div>
                     <p class="obs-title">PEEP (min):</p>
                     <div style="display:flex; justify-content: space-between;">
-                      <p id="pipmin" class="obs-value" style="display:inline;">0</p>
+                      <p id="pipmin" class="obs-value" style="display:inline;">10</p>
                       <div style="display:inline; font-size:10px;">
                         <div style="display:block;">
                           <p style="display: inline;">H: </p>
@@ -236,7 +246,7 @@
                   <div>
                     <p class="obs-title">RR:</p>
                     <div style="display:flex; justify-content: space-between;">
-                      <p id="bpm" class="obs-value" style="display:inline;">0</p>
+                      <p id="bpm" class="obs-value" style="display:inline;">28</p>
                       <div style="display:inline; font-size:10px;">
                         <div style="display:block;">
                           <p style="display: inline;">H: </p>
@@ -252,7 +262,7 @@
                   <div>
                     <p class="obs-title">I:E ratio: </p>
                     <div style="display:flex; justify-content: space-between;">
-                      <p id="inhalationtoexhalation" class="obs-value" style="display:inline;">0</p>
+                      <p id="inhalationtoexhalation" class="obs-value" style="display:inline;">1</p>
                       <div style="display:inline; font-size:10px;">
                         <div style="display:block;">
                           <p style="display: inline;">H: </p>
@@ -276,7 +286,7 @@
                         </div>
                         <div style="display:inline;">
                           <p style="display: inline;">L: </p>
-                          <div class="obs-min" style="display:inline;">5</div>
+                          <div class="obs-min" style="display:inline;">20</div>
                         </div>
                       </div>
                     </div>
@@ -292,7 +302,7 @@
                         </div>
                         <div style="display:inline;">
                           <p style="display: inline;">L: </p>
-                          <div class="obs-min" style="display:inline;">0</div>
+                          <div class="obs-min" style="display:inline;">18</div>
                         </div>
                       </div>
                     </div>
@@ -304,7 +314,7 @@
                       <div style="display:inline; font-size:10px;">
                         <div style="display:block;">
                           <p style="display: inline;">H: </p>
-                          <div class="obs-max" style="display:inline;">2000</div>
+                          <div class="obs-max" style="display:inline;">100</div>
                         </div>
                         <div style="display:inline;">
                           <p style="display: inline;">L: </p>
@@ -320,7 +330,7 @@
                       <div style="display:inline; font-size:10px;">
                         <div style="display:block;">
                           <p style="display: inline;">H: </p>
-                          <div class="obs-max" style="display:inline;">2000</div>
+                          <div class="obs-max" style="display:inline;">100</div>
                         </div>
                         <div style="display:inline;">
                           <p style="display: inline;">L: </p>
@@ -336,11 +346,11 @@
                       <div style="display:inline; font-size:10px;">
                         <div style="display:block;">
                           <p style="display: inline;">H: </p>
-                          <div class="obs-max" style="display:inline;">100</div>
+                          <div class="obs-max" style="display:inline;">3</div>
                         </div>
                         <div style="display:inline;">
                           <p style="display: inline;">L: </p>
-                          <div class="obs-min" style="display:inline;">0</div>
+                          <div class="obs-min" style="display:inline;">.2</div>
                         </div>
                       </div>
                     </div>
@@ -352,13 +362,6 @@
         </div>
       </div>
     </div>
-    <div class="control-wrapper row">
-      <label class="col-2" for="control-mode">Mode:</label>
-      <input class="col-9" type="range" id="control-mode" name="control-mode" min="0" max="2" value="0"/>
-      <label class="col-1" id="control-mode-val">PCV</label>
-    </div>
-    </div>
-    <button id="control-start" type="button" class="btn btn-primary">START</button>
     <!-- SCRIPTS TO LOAD GRAPHS -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/gitbrent/bootstrap4-toggle@3.6.1/js/bootstrap4-toggle.min.js"></script>
