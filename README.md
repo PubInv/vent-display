@@ -33,7 +33,7 @@ in order to load the packages used by serialserver.js
 
 Although it may be moved in the future, this repo is the current home of **serialserver.js**. This program combines two functions:
 1. It accepts [PIRCS] commands via webrequest and sends them to a serial port, and
-2. It accepts [PIRDS] data via the serial port and tranmsits it via UDP requests to a UDP address and port combination.
+2. It accepts [PIRDS] data via the serial port and transmits it via UDP requests to a UDP address and port combination.
 
 It does both of these simultaneously while running.
 
